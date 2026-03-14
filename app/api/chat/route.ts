@@ -9,7 +9,8 @@ export async function POST(request: Request) {
         const stream = await handleChatStream(messages, "System Prompt");
 
         return NextResponse.json({ success: true, stream });
-    } catch (error: any) {
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
     }
 }

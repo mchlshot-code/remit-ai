@@ -9,7 +9,8 @@ export async function POST(request: Request) {
         const alert = await createAlert(userId, body);
 
         return NextResponse.json({ success: true, alert });
-    } catch (error: any) {
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
     }
 }

@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
-        // Stub: Compare rates algorithm
+        await request.json(); // Stub: Compare rates algorithm payload
         return NextResponse.json({ success: true, comparison: [] });
-    } catch (error: any) {
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
     }
 }
