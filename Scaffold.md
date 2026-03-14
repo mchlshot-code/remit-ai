@@ -111,6 +111,7 @@ PROVIDERS TO INTEGRATE:
 2. Remitly — https://api.remitly.io/v2/pricing (public endpoint)
 3. WorldRemit — public rate page
 4. ExchangeRate-API — https://v6.exchangerate-api.com/v6/{API_KEY}/pair/GBP/NGN (for base rate reference)
+5. Your suggestions
 
 COMPARISON LOGIC (modules/rates/normalizer.ts):
 - After fetching all providers, sort by receiveAmount DESC
