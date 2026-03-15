@@ -69,11 +69,14 @@ export async function POST(req: NextRequest) {
       }
     });
   } catch (error: unknown) {
-    console.error('API /api/chat Error:', error);
+    console.error('Chat API error:', error);
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Invalid request', details: error.issues }, { status: 400 });
     }
-    return NextResponse.json({ error: 'Chat failure' }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }
 
