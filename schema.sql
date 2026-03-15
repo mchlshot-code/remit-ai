@@ -11,15 +11,17 @@ CREATE TABLE public.rate_cache (
     timestamp TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
-CREATE TABLE public.alerts (
+CREATE TABLE public.rate_alerts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    target_currency TEXT NOT NULL,
+    email TEXT NOT NULL,
+    from_currency TEXT NOT NULL,
+    to_currency TEXT NOT NULL,
     target_rate NUMERIC NOT NULL,
-    is_active BOOLEAN DEFAULT true,
+    current_rate NUMERIC NOT NULL,
+    is_triggered BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
 -- Indexes for performance
 CREATE INDEX idx_rate_cache_currency ON public.rate_cache(source_currency, target_currency);
-CREATE INDEX idx_alerts_user ON public.alerts(user_id);
+CREATE INDEX idx_rate_alerts_email ON public.rate_alerts(email);

@@ -1,16 +1,45 @@
-import { NextResponse } from 'next/server';
-import { handleChatStream } from '../../../modules/ai-assistant/chat-handler';
+import { groq } from '../../../lib/groq';
+import { buildSystemPrompt } from '../../../modules/ai-assistant/prompt-builder';
 
-export async function POST(request: Request) {
-    try {
-        const { messages } = await request.json();
+export async function POST(req: Request) {
+  try {
+    const { messages, currentRates } = await req.json();
 
-        // Stub: call AI chat handler
-        const stream = await handleChatStream(messages, "System Prompt");
+    const systemPrompt = buildSystemPrompt(currentRates || []);
 
-        return NextResponse.json({ success: true, stream });
-    } catch (error: unknown) {
-        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
-    }
+    const stream = await groq.chat.completions.create({
+      model: 'llama-3.1-70b-versatile',
+      max_tokens: 1024,
+      temperature: 0.3,
+      stream: true,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...(messages || [])
+      ]
+    });
+
+    const encoder = new TextEncoder();
+    const readable = new ReadableStream({
+      async start(controller) {
+        for await (const chunk of stream) {
+          const text = chunk.choices[0]?.delta?.content || '';
+          if (text) controller.enqueue(encoder.encode(text));
+        }
+        controller.close();
+      }
+    });
+
+    return new Response(readable, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Transfer-Encoding': 'chunked'
+      }
+    });
+  } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(JSON.stringify({ success: false, error: errorMsg }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
 }

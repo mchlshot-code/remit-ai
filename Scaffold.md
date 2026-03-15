@@ -140,19 +140,31 @@ Generate all code now.
 
 ## PROMPT 3 — AI Assistant (Day 3)
 
-```
 Now build the AI Assistant module for RemitAI.
 
 MODULE: modules/ai-assistant/
 
-CLAUDE INTEGRATION:
-- Model: claude-sonnet-4-20250514
+GROQ INTEGRATION:
+- SDK: groq-sdk
+- Model: llama-3.1-70b-versatile
 - Streaming: YES (use ReadableStream)
 - Context: Always inject the latest live rates into the system prompt
+- Install: npm install groq-sdk
 
-SYSTEM PROMPT TEMPLATE (prompt-builder.ts):
-```
-You are RemitAI Assistant, a friendly and knowledgeable financial guide specializing in international money transfers and remittances.
+ENVIRONMENT VARIABLE:
+GROQ_API_KEY=your_groq_api_key  ← get free at console.groq.com
+
+CLIENT SETUP (lib/groq.ts):
+import Groq from 'groq-sdk'
+
+export const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY
+})
+
+SYSTEM PROMPT TEMPLATE (modules/ai-assistant/prompt-builder.ts):
+
+You are RemitAI Assistant, a friendly and knowledgeable financial guide
+specializing in international money transfers and remittances.
 
 You have access to LIVE rate data as of {timestamp}:
 {ratesJSON}
@@ -170,17 +182,58 @@ Rules:
 - Always recommend users verify on the provider's website before transferring
 - If asked about a corridor not in your data, say so honestly
 - Keep responses concise (max 3 paragraphs unless asked for detail)
-```
 
 API ROUTE (app/api/chat/route.ts):
 - Accept: { messages: Message[], currentRates: RateResult[] }
-- Build system prompt with injected rates
-- Stream response back using Vercel AI SDK pattern
+- Build system prompt with injected live rates
+- Use groq.chat.completions.create() with stream: true
+- Stream response back using ReadableStream + TextEncoder
 - Rate limit: 20 requests per session (store in Supabase)
+
+Use this exact streaming pattern:
+
+import { groq } from '@/lib/groq'
+import { buildSystemPrompt } from '@/modules/ai-assistant/prompt-builder'
+
+export async function POST(req: Request) {
+  const { messages, currentRates } = await req.json()
+
+  const systemPrompt = buildSystemPrompt(currentRates)
+
+  const stream = await groq.chat.completions.create({
+    model: 'llama-3.1-70b-versatile',
+    max_tokens: 1024,
+    temperature: 0.3,
+    stream: true,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      ...messages
+    ]
+  })
+
+  const encoder = new TextEncoder()
+  const readable = new ReadableStream({
+    async start(controller) {
+      for await (const chunk of stream) {
+        const text = chunk.choices[0]?.delta?.content || ''
+        if (text) controller.enqueue(encoder.encode(text))
+      }
+      controller.close()
+    }
+  })
+
+  return new Response(readable, {
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Transfer-Encoding': 'chunked'
+    }
+  })
+}
 
 UI (components/ai-chat.tsx):
 - Full chat interface with message bubbles
 - Streaming text display (typewriter effect)
+- Read stream chunks using ReadableStreamDefaultReader
 - Suggested starter questions:
   * "Which is cheapest to send £500 to Nigeria?"
   * "What are the hidden fees on Remitly?"
@@ -190,9 +243,25 @@ UI (components/ai-chat.tsx):
 - Loading skeleton while streaming
 - Clear chat button
 
-Generate all code now.
-```
+Use this client-side streaming read pattern in ai-chat.tsx:
 
+const response = await fetch('/api/chat', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ messages, currentRates })
+})
+
+const reader = response.body?.getReader()
+const decoder = new TextDecoder()
+
+while (true) {
+  const { done, value } = await reader.read()
+  if (done) break
+  const chunk = decoder.decode(value)
+  setStreamingMessage(prev => prev + chunk)
+}
+
+Generate all code now.
 ---
 
 ## PROMPT 4 — Rate Alerts (Day 4)
