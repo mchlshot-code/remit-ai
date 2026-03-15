@@ -35,6 +35,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-
+# docs
 Scaffold.md
 Philosophy.md
