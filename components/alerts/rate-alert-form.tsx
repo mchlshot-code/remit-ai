@@ -9,10 +9,10 @@ import { useQuery } from '@tanstack/react-query';
 import { NormalizedRatesResponse } from '@/modules/rates/types';
 import { Bell, ShieldCheck } from 'lucide-react';
 import { useRatesStore } from '@/modules/rates/store';
-import { CURRENCY_SYMBOLS } from '@/config/providers';
+import { CURRENCY_SYMBOLS, SUPPORTED_CORRIDORS } from '@/config/providers';
 
 const AlertSchema = z.object({
-  targetRate: z.number().min(1, 'Target rate must be positive'),
+  targetRate: z.number().min(0.01, 'Target rate must be positive'),
 });
 
 type AlertFormData = z.infer<typeof AlertSchema>;
@@ -22,9 +22,19 @@ interface RateAlertFormProps {
 }
 
 export function RateAlertForm({ userEmail }: RateAlertFormProps) {
-  const { sourceCurrency, targetCurrency } = useRatesStore();
-  const srcSymbol = CURRENCY_SYMBOLS[sourceCurrency] || sourceCurrency;
-  const tgtSymbol = CURRENCY_SYMBOLS[targetCurrency] || targetCurrency;
+  const { sourceCurrency: storeSource, targetCurrency: storeTarget } = useRatesStore();
+  
+  // Local state for corridor selection (defaults to store values if supported, else first supported)
+  const defaultSecondary = `${storeSource}-${storeTarget}`;
+  const isStoreSupported = SUPPORTED_CORRIDORS.some(c => `${c.from}-${c.to}` === defaultSecondary);
+  
+  const [selectedCorridor, setSelectedCorridor] = useState(
+    isStoreSupported ? defaultSecondary : `${SUPPORTED_CORRIDORS[0].from}-${SUPPORTED_CORRIDORS[0].to}`
+  );
+
+  const [fromCurr, toCurr] = selectedCorridor.split('-');
+  const srcSymbol = CURRENCY_SYMBOLS[fromCurr] || fromCurr;
+  const tgtSymbol = CURRENCY_SYMBOLS[toCurr] || toCurr;
 
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   
@@ -34,12 +44,12 @@ export function RateAlertForm({ userEmail }: RateAlertFormProps) {
   });
 
   const { data: latestRates, isLoading: ratesLoading } = useQuery<NormalizedRatesResponse, Error>({
-    queryKey: ['latest_rates_alerts', sourceCurrency, targetCurrency],
+    queryKey: ['latest_rates_alerts', fromCurr, toCurr],
     queryFn: async () => {
       const res = await fetch('/api/rates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sourceCurrency, targetCurrency, amount: 100 })
+        body: JSON.stringify({ sourceCurrency: fromCurr, targetCurrency: toCurr, amount: 100 })
       });
       if (!res.ok) throw new Error('Failed to fetch rates');
       return res.json();
@@ -58,8 +68,8 @@ export function RateAlertForm({ userEmail }: RateAlertFormProps) {
         body: JSON.stringify({
           targetRate: data.targetRate,
           email: userEmail,
-          sourceCurrency,
-          targetCurrency,
+          sourceCurrency: fromCurr,
+          targetCurrency: toCurr,
         })
       });
       
@@ -67,10 +77,6 @@ export function RateAlertForm({ userEmail }: RateAlertFormProps) {
       
       setSuccessMsg(`Alert set! We'll email you when the rate hits ${tgtSymbol}${data.targetRate}`);
       reset();
-      
-      // We don't need to manually update active alerts list here 
-      // as the page will be revalidated or re-fetched if we trigger a refresh.
-      // For now, simple success message is enough as the user is already on the alerts page.
       
       setTimeout(() => setSuccessMsg(null), 5000);
     } catch (e) {
@@ -92,7 +98,7 @@ export function RateAlertForm({ userEmail }: RateAlertFormProps) {
           </div>
           <div>
             <h2 className="font-display text-2xl font-bold">Create Rate Alert</h2>
-            <p className="text-sm text-muted-foreground font-medium">{sourceCurrency} to {targetCurrency}</p>
+            <p className="text-sm text-muted-foreground font-medium">{fromCurr} to {toCurr}</p>
           </div>
         </div>
 
@@ -117,10 +123,27 @@ export function RateAlertForm({ userEmail }: RateAlertFormProps) {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid gap-6">
-            <div className="space-y-2">
-              <div className="text-sm font-bold text-muted-foreground uppercase tracking-wider px-1">Logged in as</div>
-              <div className="text-base font-semibold px-5 py-3 bg-muted/30 border-2 rounded-2xl w-full text-foreground/80">
-                {userEmail}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="text-sm font-bold text-muted-foreground uppercase tracking-wider px-1">CORRIDOR</div>
+                <select
+                  value={selectedCorridor}
+                  onChange={(e) => setSelectedCorridor(e.target.value)}
+                  className="w-full h-14 px-5 bg-muted/30 border-2 rounded-2xl font-bold text-lg outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer"
+                >
+                  {SUPPORTED_CORRIDORS.map((c) => (
+                    <option key={`${c.from}-${c.to}`} value={`${c.from}-${c.to}`}>
+                      {c.from} → {c.to}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-sm font-bold text-muted-foreground uppercase tracking-wider px-1">Logged in as</div>
+                <div className="text-base font-semibold px-5 py-3 bg-muted/30 border-2 rounded-2xl w-full text-foreground/80">
+                  {userEmail}
+                </div>
               </div>
             </div>
 
