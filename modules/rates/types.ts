@@ -17,7 +17,16 @@ export interface RateRequest {
     amount: number;
 }
 
+export interface ParallelRateEstimate {
+    estimatedParallelRate: number;
+    premiumPercent: number;
+    disclaimer: string;
+    source: string;
+}
+
 export interface NormalizedRatesResponse {
     rates: RateResult[];
     savingsMessage: string | null;
+    baseRate?: number;
+    parallelRateEstimate?: ParallelRateEstimate;
 }

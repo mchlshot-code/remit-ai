@@ -54,12 +54,11 @@ export function AiChat() {
       // Get the latest rates from react-query cache or fallback to empty array
       const queryKey = ['rates', ratesStore.sourceCurrency, ratesStore.targetCurrency, ratesStore.amount];
       const ratesData = queryClient.getQueryData<NormalizedRatesResponse>(queryKey);
-      const currentRates = ratesData?.rates || [];
 
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages, currentRates })
+        body: JSON.stringify({ messages: newMessages, ratesData })
       });
 
       if (!response.ok) throw new Error('Failed to fetch response');

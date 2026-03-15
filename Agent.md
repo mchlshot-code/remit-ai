@@ -124,6 +124,12 @@ export async function getCachedRates(): Promise<RateResult[]> {
 - No raw `fetch` calls in components — always go through custom hooks
 - Loading and error states are mandatory on every query
 
+### FX Volatility & Parallel Market
+- The Nigerian FX market is highly volatile. The gap between official and parallel (street) rates can fluctuate significantly (10% to 40%).
+- **Never use static math or fixed premium multipliers** to estimate the parallel market rate. 
+- Always fetch real-time parallel market rates via live API integrations (e.g., Korapay API, AbokiFX wrappers) where available.
+- Fallback proxies or simulated API hits are acceptable if keys are missing during development, but the architecture MUST always attempt an external fetch first.
+
 ---
 
 ## 🤖 AI Assistant Rules

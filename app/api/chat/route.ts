@@ -3,9 +3,9 @@ import { buildSystemPrompt } from '../../../modules/ai-assistant/prompt-builder'
 
 export async function POST(req: Request) {
   try {
-    const { messages, currentRates } = await req.json();
+    const { messages, ratesData } = await req.json();
 
-    const systemPrompt = buildSystemPrompt(currentRates || []);
+    const systemPrompt = buildSystemPrompt(ratesData || { rates: [] });
 
     const stream = await groq.chat.completions.create({
       model: 'llama-3.1-70b-versatile',

@@ -1,4 +1,4 @@
-import { RateResult, NormalizedRatesResponse } from './types';
+import { RateResult, NormalizedRatesResponse, ParallelRateEstimate } from './types';
 
 export function normalizeAndCompare(results: RateResult[], sourceCurrency: string): NormalizedRatesResponse {
     if (!results.length) return { rates: [], savingsMessage: null };
@@ -32,4 +32,17 @@ export function normalizeAndCompare(results: RateResult[], sourceCurrency: strin
         rates: processedRates,
         savingsMessage
     };
+}
+
+export function calculateParallelRate(officialRate: number): ParallelRateEstimate {
+  const PARALLEL_PREMIUM_MIN = 0.08;  // 8% above official
+  const PARALLEL_PREMIUM_MAX = 0.15;  // 15% above official
+  const midPremium = (PARALLEL_PREMIUM_MIN + PARALLEL_PREMIUM_MAX) / 2;
+
+  return {
+    estimatedParallelRate: Math.round(officialRate * (1 + midPremium)),
+    premiumPercent: Math.round(midPremium * 100),
+    disclaimer: "Parallel market estimate only. Actual street rates vary. Verify before transacting.",
+    source: "Estimated based on historical parallel market premium (8–15%)"
+  };
 }

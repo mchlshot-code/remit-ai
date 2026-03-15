@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Syne } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 import Providers from "../components/providers";
 
-const inter = Inter({ subsets: ["latin"] });
+const syne = Syne({ 
+  subsets: ["latin"],
+  variable: "--font-syne",
+  weight: ["400", "500", "600", "700", "800"],
+});
 
 export const metadata: Metadata = {
   title: "RemitAI - Compare Remittance Rates",
@@ -16,8 +21,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" suppressHydrationWarning className={`${GeistSans.variable} ${syne.variable}`}>
+      <body className="font-sans antialiased bg-background text-foreground">
         <Providers>
           <div className="flex min-h-screen flex-col">
             <header className="border-b h-16 flex items-center px-8 font-semibold">

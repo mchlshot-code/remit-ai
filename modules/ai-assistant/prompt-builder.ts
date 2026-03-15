@@ -1,14 +1,26 @@
-import { RateResult } from '../rates/types';
+import { RateResult, NormalizedRatesResponse } from '../rates/types';
 
-export function buildSystemPrompt(currentRates: RateResult[]): string {
+export function buildSystemPrompt(ratesData: NormalizedRatesResponse): string {
   const timestamp = new Date().toISOString();
-  const ratesJSON = JSON.stringify(currentRates, null, 2);
+  const ratesJSON = JSON.stringify(ratesData.rates, null, 2);
+  
+  let rateContext = `Official GBP/NGN rate: ${ratesData.baseRate || 'Unknown'}
+`;
+  if (ratesData.parallelRateEstimate) {
+    rateContext += `Estimated parallel market rate: ${ratesData.parallelRateEstimate.estimatedParallelRate} (approx. ${ratesData.parallelRateEstimate.premiumPercent}% above official)
+Note: Remind users that transfer providers like Wise and Remitly use rates close to the official/interbank rate, not the parallel market rate.
+
+When explaining rates, clearly state the difference between the official interbank rate and the actual purchasing power on the ground (parallel rate).`;
+  }
 
   return `You are RemitAI Assistant, a friendly and knowledgeable financial guide
 specializing in international money transfers and remittances.
 
 You have access to LIVE rate data as of ${timestamp}:
 ${ratesJSON}
+
+Rate Environment Data:
+${rateContext}
 
 Your role:
 - Help users understand which provider is best for their specific situation
