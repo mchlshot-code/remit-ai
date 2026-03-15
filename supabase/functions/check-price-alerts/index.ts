@@ -1,3 +1,9 @@
+// deno-lint-ignore-file
+// eslint-disable-next-line @typescript-eslint/no-namespace
+declare const Deno: {
+  serve(handler: (req: Request) => Response | Promise<Response>): void;
+};
+
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 /**
