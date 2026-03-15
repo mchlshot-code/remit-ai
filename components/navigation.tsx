@@ -1,11 +1,43 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { ArrowLeftRight, Sparkles, Bell } from 'lucide-react';
+import Image from 'next/image';
+import { usePathname, useRouter } from 'next/navigation';
+import { ArrowLeftRight, Sparkles, Bell, LogOut, User } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { useEffect, useState } from 'react';
+import { User as SupabaseUser } from '@supabase/supabase-js';
+import { GoogleSignInButton } from './auth/google-sign-in-button';
 
 export function Navigation() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      setLoading(false);
+    };
+
+    getUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase.auth]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.refresh();
+    router.push('/');
+  };
 
   const links = [
     { href: '/', label: 'Compare', icon: ArrowLeftRight },
@@ -20,7 +52,7 @@ export function Navigation() {
         <Link href="/" className="font-display font-bold text-xl mr-8 text-emerald-600">
           RemitAI
         </Link>
-        <nav className="flex items-center gap-6">
+        <nav className="flex items-center gap-6 flex-1">
           {links.map(({ href, label, icon: Icon }) => {
             const isActive = pathname === href;
             return (
@@ -37,13 +69,59 @@ export function Navigation() {
             );
           })}
         </nav>
+
+        <div className="flex items-center gap-4">
+          {!loading && (
+            user ? (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border text-sm font-medium">
+                  {user.user_metadata.avatar_url ? (
+                    <Image 
+                      src={user.user_metadata.avatar_url} 
+                      alt="Avatar" 
+                      width={24}
+                      height={24}
+                      className="w-6 h-6 rounded-full border border-emerald-500/20"
+                      unoptimized
+                    />
+                  ) : (
+                    <User className="w-4 h-4 text-emerald-500" />
+                  )}
+                  <span className="max-w-[120px] truncate">{user.email}</span>
+                </div>
+                <button 
+                  onClick={handleSignOut}
+                  className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
+                  title="Sign Out"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="w-48">
+                <GoogleSignInButton />
+              </div>
+            )
+          )}
+        </div>
       </header>
 
-      {/* Mobile Top Header (Just Logo) */}
-      <header className="flex md:hidden border-b h-14 items-center justify-center bg-background/80 backdrop-blur-md sticky top-0 z-50">
+      {/* Mobile Top Header */}
+      <header className="flex md:hidden border-b h-14 items-center justify-between px-4 bg-background/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="w-8" /> {/* Spacer */}
         <Link href="/" className="font-display font-bold text-lg text-emerald-600">
           RemitAI
         </Link>
+        <div className="flex items-center">
+          {user && (
+             <button 
+                onClick={handleSignOut}
+                className="p-2 text-muted-foreground"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+          )}
+        </div>
       </header>
 
       {/* Mobile Bottom Tab Navigation */}

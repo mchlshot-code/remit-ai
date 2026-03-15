@@ -212,6 +212,16 @@ Set a target exchange rate and we'll email you the moment any provider hits it:
 
 ---
 
+### Supabase Auth (Google)
+1. Go to **Supabase Dashboard → Authentication → Providers → Google**.
+2. **Enable** Google provider.
+3. Configure **Client ID** and **Client Secret** (from Google Cloud Console).
+4. Add the redirect URL to Google Cloud: `https://YOUR_PROJECT.vercel.app/auth/callback`.
+5. For local testing, add: `http://localhost:3000/auth/callback`.
+6. Ensure `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are set in Vercel/environment.
+
+---
+
 ## 🚢 Deployment
 
 ### Deploy to Vercel (Recommended)

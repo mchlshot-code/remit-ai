@@ -7,12 +7,14 @@ import * as z from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { NormalizedRatesResponse } from '@/modules/rates/types';
-import { Bell, ShieldCheck, Info, Trash2 } from 'lucide-react';
+import { Bell, ShieldCheck, Info, Trash2, Loader2 } from 'lucide-react';
 import { useRatesStore } from '@/modules/rates/store';
 import { CURRENCY_SYMBOLS } from '@/config/providers';
+import { createClient } from '@/lib/supabase/client';
+import { useEffect } from 'react';
+import { User } from '@supabase/supabase-js';
 
 const AlertSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
   targetRate: z.number().min(1, 'Target rate must be positive'),
 });
 
@@ -23,11 +25,22 @@ export function RateAlertForm() {
   const srcSymbol = CURRENCY_SYMBOLS[sourceCurrency] || sourceCurrency;
   const tgtSymbol = CURRENCY_SYMBOLS[targetCurrency] || targetCurrency;
 
+  const [user, setUser] = useState<User | null>(null);
+  const [userLoading, setUserLoading] = useState(true);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [activeAlerts, setActiveAlerts] = useState<{id: string, rate: number, source: string, target: string}[]>([
     // Removed the dummy alert as it might be confusing if they change corridors.
     // In a real app this would be fetched from the DB based on the email.
   ]);
+
+  const supabase = createClient();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+      setUserLoading(false);
+    });
+  }, [supabase]);
   
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<AlertFormData>({
     resolver: zodResolver(AlertSchema),
@@ -51,13 +64,15 @@ export function RateAlertForm() {
   const currentBestRate = latestRates?.rates?.[0]?.exchangeRate || 0;
 
   const onSubmit = async (data: AlertFormData) => {
+    if (!user) return;
     try {
       setSuccessMsg(null);
       const res = await fetch('/api/alerts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...data,
+          targetRate: data.targetRate,
+          email: user.email,
           sourceCurrency,
           targetCurrency,
         })
@@ -78,6 +93,14 @@ export function RateAlertForm() {
   const removeAlert = (id: string) => {
     setActiveAlerts(prev => prev.filter(a => a.id !== id));
   };
+
+  if (userLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col gap-8">
@@ -117,17 +140,14 @@ export function RateAlertForm() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Email Address</label>
-              <input 
-                {...register('email')}
-                type="email" 
-                placeholder="you@example.com"
-                className="w-full h-12 px-4 rounded-xl border bg-background focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-              />
-              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+          <div className="flex flex-col gap-1.5 mb-2">
+            <div className="text-sm font-medium">Logged in as</div>
+            <div className="text-sm text-muted-foreground px-4 py-2 bg-muted/50 border rounded-xl w-full">
+              {user?.email}
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
             <div>
               <label className="text-sm font-medium mb-1.5 block">Target Rate ({tgtSymbol})</label>
               <div className="relative">
@@ -135,6 +155,7 @@ export function RateAlertForm() {
                 <input 
                   {...register('targetRate', { valueAsNumber: true })}
                   type="number" 
+                  step="any"
                   className="w-full h-12 pl-8 pr-4 rounded-xl border bg-background focus:ring-2 focus:ring-emerald-500 outline-none transition-all font-medium"
                 />
               </div>
