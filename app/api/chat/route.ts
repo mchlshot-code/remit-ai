@@ -28,6 +28,8 @@ const ChatRequestSchema = z.object({
     disclaimer: z.string(),
     source: z.string(),
   }).nullable().optional(),
+  sourceCurrency: z.string().default('GBP'),
+  targetCurrency: z.string().default('NGN'),
 });
 
 export async function POST(req: NextRequest) {
@@ -39,6 +41,8 @@ export async function POST(req: NextRequest) {
       rates: parsed.currentRates,
       baseRate: parsed.baseRate,
       parallelRateEstimate: parsed.parallelRateEstimate,
+      sourceCurrency: parsed.sourceCurrency,
+      targetCurrency: parsed.targetCurrency,
     });
 
     const stream = await groq.chat.completions.create({
