@@ -5,8 +5,11 @@ import { motion } from 'framer-motion';
 import { Message } from '@/modules/ai-assistant/types';
 import { useQuery } from '@tanstack/react-query';
 import { NormalizedRatesResponse } from '@/modules/rates/types';
+import { useRatesStore } from '@/modules/rates/store';
 
 export function AiChat() {
+  const { sourceCurrency, targetCurrency, amount } = useRatesStore();
+
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: "Hi! I'm your RemitAI Assistant. I can help you find the best rates, understand hidden fees, or explain the parallel market. How can I help you send money home today?" }
   ]);
@@ -21,13 +24,13 @@ export function AiChat() {
 
   // Optionally fetch the latest rates to inject into the API request Context
   const { data: latestRates, isLoading: ratesLoading } = useQuery<NormalizedRatesResponse, Error>({
-    queryKey: ['latest_rates'],
+    queryKey: ['latest_rates', sourceCurrency, targetCurrency, amount],
     queryFn: async () => {
-      // By default request GBP to NGN for 500 equivalent generic context
+      // Fetch rates for the currently selected corridor context
       const res = await fetch('/api/rates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sourceCurrency: 'GBP', targetCurrency: 'NGN', amount: 500 })
+        body: JSON.stringify({ sourceCurrency, targetCurrency, amount: amount || 500 })
       });
       if (!res.ok) throw new Error('Failed to fetch rates');
       return res.json();
