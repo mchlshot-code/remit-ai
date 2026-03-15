@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { anthropic } from '@/lib/anthropic';
+import { groq } from '@/lib/groq';
 import { buildSystemPrompt } from '@/modules/ai-assistant/prompt-builder';
 
 // Validate the incoming JSON shape
@@ -41,12 +41,14 @@ export async function POST(req: NextRequest) {
       parallelRateEstimate: parsed.parallelRateEstimate,
     });
 
-    const stream = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022', // Agent.md specifies newest sonnet
+    const stream = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
       max_tokens: 1024,
       temperature: 0.3,
-      system: systemPrompt,
-      messages: parsed.messages,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...parsed.messages
+      ],
       stream: true,
     });
 
@@ -54,8 +56,9 @@ export async function POST(req: NextRequest) {
     const readable = new ReadableStream({
       async start(controller) {
         for await (const chunk of stream) {
-          if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-            controller.enqueue(encoder.encode(chunk.delta.text));
+          const content = chunk.choices[0]?.delta?.content || '';
+          if (content) {
+            controller.enqueue(encoder.encode(content));
           }
         }
         controller.close();
@@ -79,4 +82,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-
