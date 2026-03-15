@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Sparkles } from 'lucide-react';
@@ -11,9 +11,13 @@ import { NormalizedRatesResponse } from '@/modules/rates/types';
 import { useRatesStore } from '@/modules/rates/store';
 import { RateDualDisplayContainer } from '@/components/rate-dual-display-container';
 import { RateAlertForm } from '@/components/alerts/rate-alert-form';
+import { createClient } from '@/lib/supabase/client';
+import { User } from '@supabase/supabase-js';
 
-export default function LandingPage() {
+export default function Home() {
   const { 
+    sourceCurrency,
+    targetCurrency,
     setHasSearched, 
     setSourceCurrency, 
     setTargetCurrency, 
@@ -21,6 +25,16 @@ export default function LandingPage() {
   } = useRatesStore();
   
   const [requestData, setRequestData] = useState<RateFormData | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [userLoading, setUserLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+      setUserLoading(false);
+    });
+  }, [supabase]);
 
   const { data, isLoading, error } = useQuery<NormalizedRatesResponse, Error>({
     queryKey: ['rates', requestData?.sourceCurrency, requestData?.targetCurrency, requestData?.amount],
@@ -92,15 +106,31 @@ export default function LandingPage() {
               targetCurrency={requestData?.targetCurrency || 'NGN'}
             />
             
-            {data && data.rates.length > 0 && (
+            {data && data.rates.length > 0 && !userLoading && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="w-full"
+                className="w-full flex flex-col items-center"
               >
                 <div className="w-full h-px bg-border max-w-3xl mx-auto mb-12" />
-                <RateAlertForm />
+                
+                {user ? (
+                  <RateAlertForm userEmail={user.email!} />
+                ) : (
+                  <div className="w-full max-w-2xl bg-card border rounded-3xl p-8 text-center shadow-lg">
+                    <h3 className="text-2xl font-display font-bold mb-4">Never Miss a Peak Rate</h3>
+                    <p className="text-muted-foreground mb-8">
+                      Sign in with Google to set custom alerts and get notified the moment {sourceCurrency} to {targetCurrency} hits your target.
+                    </p>
+                    <Link 
+                      href="/alerts"
+                      className="inline-flex h-14 px-8 items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-lg rounded-2xl transition-all shadow-xl shadow-emerald-500/20"
+                    >
+                      Get Started with Rate Alerts
+                    </Link>
+                  </div>
+                )}
               </motion.div>
             )}
           </div>

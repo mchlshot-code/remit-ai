@@ -39,10 +39,22 @@ export function Navigation() {
     router.push('/');
   };
 
+  const handleAlertsClick = async (e: React.MouseEvent) => {
+    if (!user && !loading) {
+      e.preventDefault();
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/alerts`,
+        },
+      });
+    }
+  };
+
   const links = [
     { href: '/', label: 'Compare', icon: ArrowLeftRight },
     { href: '/chat', label: 'AI Assistant', icon: Sparkles },
-    { href: '/alerts', label: 'Rate Alerts', icon: Bell },
+    { href: '/alerts', label: 'Rate Alerts', icon: Bell, onClick: handleAlertsClick },
   ];
 
   return (
@@ -53,12 +65,13 @@ export function Navigation() {
           RemitAI
         </Link>
         <nav className="flex items-center gap-6 flex-1">
-          {links.map(({ href, label, icon: Icon }) => {
+          {links.map(({ href, label, icon: Icon, onClick }) => {
             const isActive = pathname === href;
             return (
               <Link
                 key={href}
                 href={href}
+                onClick={onClick}
                 className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-emerald-500 ${
                   isActive ? 'text-emerald-500' : 'text-muted-foreground'
                 }`}
@@ -126,12 +139,13 @@ export function Navigation() {
 
       {/* Mobile Bottom Tab Navigation */}
       <nav className="flex md:hidden fixed bottom-0 left-0 right-0 h-16 bg-background border-t z-50 items-center justify-around pb-safe">
-        {links.map(({ href, label, icon: Icon }) => {
+        {links.map(({ href, label, icon: Icon, onClick }) => {
           const isActive = pathname === href;
           return (
             <Link
               key={href}
               href={href}
+              onClick={onClick}
               className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
                 isActive ? 'text-emerald-500' : 'text-muted-foreground'
               }`}
