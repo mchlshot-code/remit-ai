@@ -1,11 +1,18 @@
-import { AlertForm } from '../../components/alert-form';
+import { RateAlertForm } from '@/components/alerts/rate-alert-form';
 
 export default function AlertsPage() {
-    return (
-        <div className="max-w-4xl mx-auto py-8">
-            <h1 className="text-3xl font-bold mb-4">Rate Alerts</h1>
-            <p className="mb-8 text-gray-600">Set up notifications to get an email when rates hit your target.</p>
-            <AlertForm />
+  return (
+    <main className="min-h-[calc(100vh-4rem)] bg-background">
+      <div className="container mx-auto px-4 py-8 md:py-16">
+        <div className="max-w-2xl mx-auto mb-8 text-center">
+          <h1 className="font-display text-4xl font-bold mb-3">Rate Alerts</h1>
+          <p className="text-muted-foreground">
+            Set your target exchange rate and we&apos;ll notify you the moment it&apos;s available.
+          </p>
         </div>
-    );
+        
+        <RateAlertForm />
+      </div>
+    </main>
+  );
 }

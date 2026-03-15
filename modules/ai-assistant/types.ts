@@ -1,9 +1,11 @@
-export interface ChatMessage {
-    role: 'user' | 'assistant' | 'system';
-    content: string;
+import { RateResult } from '../rates/types';
+
+export interface Message {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
 }
 
-export interface AiChatState {
-    messages: ChatMessage[];
-    isThinking: boolean;
+export interface ChatRequest {
+  messages: Message[];
+  currentRates: RateResult[];
 }

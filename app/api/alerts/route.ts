@@ -1,56 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createAlert, getUserAlerts, deleteAlert } from '../../../modules/alerts/alert-service';
+import { RateAlertRequest } from '@/modules/alerts/types';
 
-const CreateAlertSchema = z.object({
+const AlertSchema = z.object({
   email: z.string().email(),
-  fromCurrency: z.string().length(3),
-  toCurrency: z.string().length(3),
+  sourceCurrency: z.string().min(3).max(3),
+  targetCurrency: z.string().min(3).max(3),
   targetRate: z.number().positive(),
-  currentRate: z.number().positive()
 });
 
 export async function POST(req: NextRequest) {
   try {
-    const body = CreateAlertSchema.parse(await req.json());
-    const alert = await createAlert(body);
-    return NextResponse.json({ success: true, alert });
-  } catch (error: unknown) {
-    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
-  }
-}
+    const body = await req.json();
+    const parsed = AlertSchema.parse(body) as RateAlertRequest;
 
-export async function GET(req: NextRequest) {
-  try {
-    const searchParams = req.nextUrl.searchParams;
-    const email = searchParams.get('email');
-    
-    if (!email) {
-      return NextResponse.json({ success: false, error: 'Email parameter is required' }, { status: 400 });
+    // TODO: Insert into Supabase 'alerts' table when DB is connected.
+    // For now, mock a successful save and return a fake ID with the data
+    const mockCreatedAlert = {
+      id: Math.random().toString(36).substring(7),
+      ...parsed,
+      createdAt: new Date().toISOString(),
+      isActive: true,
+    };
+
+    return NextResponse.json(mockCreatedAlert, { status: 201 });
+  } catch (error: unknown) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Validation failed', details: error.issues }, { status: 400 });
     }
-
-    const alerts = await getUserAlerts(email);
-    return NextResponse.json({ success: true, alerts });
-  } catch (error: unknown) {
-    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
-  }
-}
-
-export async function DELETE(req: NextRequest) {
-  try {
-    const searchParams = req.nextUrl.searchParams;
-    const id = searchParams.get('id');
-    
-    if (!id) {
-      return NextResponse.json({ success: false, error: 'Alert ID is required' }, { status: 400 });
-    }
-
-    await deleteAlert(id);
-    return NextResponse.json({ success: true, deleted: id });
-  } catch (error: unknown) {
-    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to create alert.' }, { status: 500 });
   }
 }
