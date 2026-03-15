@@ -62,6 +62,15 @@ export default function Home() {
     setAmount(formData.amount);
   };
 
+  const handleAlertsSignIn = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=/alerts`,
+      },
+    });
+  };
+
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col items-center">
       {/* Hero Section */}
@@ -123,12 +132,12 @@ export default function Home() {
                     <p className="text-muted-foreground mb-8">
                       Sign in with Google to set custom alerts and get notified the moment {sourceCurrency} to {targetCurrency} hits your target.
                     </p>
-                    <Link 
-                      href="/alerts"
-                      className="inline-flex h-14 px-8 items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-lg rounded-2xl transition-all shadow-xl shadow-emerald-500/20"
+                    <button 
+                      onClick={handleAlertsSignIn}
+                      className="inline-flex h-14 px-8 items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-lg rounded-2xl transition-all shadow-xl shadow-emerald-500/20 active:scale-[0.98]"
                     >
                       Get Started with Rate Alerts
-                    </Link>
+                    </button>
                   </div>
                 )}
               </motion.div>
