@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { Sparkles } from 'lucide-react';
 import { RateInputForm, RateFormData } from '@/components/rates/rate-input-form';
 import { ComparisonTable } from '@/components/rates/comparison-table';
 import { useQuery } from '@tanstack/react-query';
@@ -61,9 +63,18 @@ export default function LandingPage() {
           <h1 className="font-display text-5xl md:text-7xl font-extrabold tracking-tight mb-6 text-balance">
             Send Money Smarter. <span className="text-emerald-500">Understand the Real Value.</span>
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
             Compare live official rates with estimated parallel market reality. So you can ensure your family receives exactly what they deserve.
           </p>
+          <div className="flex justify-center mb-10">
+            <Link 
+              href="/chat" 
+              className="inline-flex items-center justify-center h-12 px-6 rounded-full bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 font-semibold transition-colors gap-2"
+            >
+              <Sparkles className="w-4 h-4" />
+              Ask AI Assistant &rarr;
+            </Link>
+          </div>
         </motion.div>
 
         <RateInputForm onSubmit={onSubmit} isLoading={isLoading} />
@@ -77,6 +88,8 @@ export default function LandingPage() {
               data={data || null} 
               isLoading={isLoading} 
               error={error?.message || null} 
+              sourceCurrency={requestData?.sourceCurrency || 'GBP'}
+              targetCurrency={requestData?.targetCurrency || 'NGN'}
             />
             
             {data && data.rates.length > 0 && (

@@ -2,14 +2,19 @@
 
 import { motion, Variants } from 'framer-motion';
 import { NormalizedRatesResponse } from '@/modules/rates/types';
+import { CURRENCY_SYMBOLS } from '@/config/providers';
 
 interface Props {
   data: NormalizedRatesResponse | null;
   isLoading: boolean;
   error: string | null;
+  sourceCurrency: string;
+  targetCurrency: string;
 }
 
-export function ComparisonTable({ data, isLoading, error }: Props) {
+export function ComparisonTable({ data, isLoading, error, sourceCurrency, targetCurrency }: Props) {
+  const srcSymbol = CURRENCY_SYMBOLS[sourceCurrency] || sourceCurrency;
+  const tgtSymbol = CURRENCY_SYMBOLS[targetCurrency] || targetCurrency;
   const container: Variants = {
     hidden: { opacity: 0 },
     show: {
@@ -92,12 +97,12 @@ export function ComparisonTable({ data, isLoading, error }: Props) {
               <div className="flex-1 min-w-[200px]">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-sm font-medium text-muted-foreground">Provider Rate:</span>
-                  <span className="font-semibold">£1 = ₦{provider.exchangeRate.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                  <span className="font-semibold">{srcSymbol}1 = {tgtSymbol}{provider.exchangeRate.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
                 </div>
                 {/* Parallel Market Insight */}
                 {data.parallelRateEstimate && (
                    <div className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs px-2 py-1.5 rounded-md inline-flex items-center gap-1.5 mt-1 border border-amber-500/20">
-                     <span>Street Est: ~₦{data.parallelRateEstimate.estimatedParallelRate.toLocaleString()} ({data.parallelRateEstimate.premiumPercent}% gap)</span>
+                     <span>Street Est: ~{tgtSymbol}{data.parallelRateEstimate.estimatedParallelRate.toLocaleString()} ({data.parallelRateEstimate.premiumPercent}% gap)</span>
                      <div className="w-4 h-4 rounded-full bg-amber-500/20 flex flex-shrink-0 items-center justify-center cursor-help" title={data.parallelRateEstimate.disclaimer}>
                        i
                      </div>
@@ -109,10 +114,10 @@ export function ComparisonTable({ data, isLoading, error }: Props) {
               <div className="text-left md:text-right">
                 <div className="text-sm text-muted-foreground mb-1">Recipient Gets</div>
                 <div className="font-display text-2xl font-bold text-emerald-500 mb-2">
-                  ₦{provider.receiveAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {tgtSymbol}{provider.receiveAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  Fee: £{provider.fee.toFixed(2)} included
+                  Fee: {srcSymbol}{provider.fee.toFixed(2)} included
                 </div>
               </div>
             </div>

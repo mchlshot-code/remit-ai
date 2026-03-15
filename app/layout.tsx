@@ -3,6 +3,7 @@ import { Syne } from "next/font/google";
 import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 import Providers from "../components/providers";
+import { Navigation } from "@/components/navigation";
 
 const syne = Syne({ 
   subsets: ["latin"],
@@ -24,11 +25,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className={`${GeistSans.variable} ${syne.variable}`}>
       <body className="font-sans antialiased bg-background text-foreground">
         <Providers>
-          <div className="flex min-h-screen flex-col">
-            <header className="border-b h-16 flex items-center px-8 font-semibold">
-              RemitAI
-            </header>
-            <div className="flex-1">
+          <div className="flex min-h-screen flex-col font-sans">
+            <Navigation />
+            <div className="flex-1 pb-16 md:pb-0">
               {children}
             </div>
           </div>

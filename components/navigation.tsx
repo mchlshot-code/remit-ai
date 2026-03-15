@@ -1,0 +1,69 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { ArrowLeftRight, Sparkles, Bell } from 'lucide-react';
+
+export function Navigation() {
+  const pathname = usePathname();
+
+  const links = [
+    { href: '/', label: 'Compare', icon: ArrowLeftRight },
+    { href: '/chat', label: 'AI Assistant', icon: Sparkles },
+    { href: '/alerts', label: 'Rate Alerts', icon: Bell },
+  ];
+
+  return (
+    <>
+      {/* Desktop Header */}
+      <header className="hidden md:flex border-b h-16 items-center px-8 bg-background/80 backdrop-blur-md sticky top-0 z-50">
+        <Link href="/" className="font-display font-bold text-xl mr-8 text-emerald-600">
+          RemitAI
+        </Link>
+        <nav className="flex items-center gap-6">
+          {links.map(({ href, label, icon: Icon }) => {
+            const isActive = pathname === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-emerald-500 ${
+                  isActive ? 'text-emerald-500' : 'text-muted-foreground'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+      </header>
+
+      {/* Mobile Top Header (Just Logo) */}
+      <header className="flex md:hidden border-b h-14 items-center justify-center bg-background/80 backdrop-blur-md sticky top-0 z-50">
+        <Link href="/" className="font-display font-bold text-lg text-emerald-600">
+          RemitAI
+        </Link>
+      </header>
+
+      {/* Mobile Bottom Tab Navigation */}
+      <nav className="flex md:hidden fixed bottom-0 left-0 right-0 h-16 bg-background border-t z-50 items-center justify-around pb-safe">
+        {links.map(({ href, label, icon: Icon }) => {
+          const isActive = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
+                isActive ? 'text-emerald-500' : 'text-muted-foreground'
+              }`}
+            >
+              <Icon className={`w-5 h-5 ${isActive ? 'fill-emerald-500/20' : ''}`} />
+              <span className="text-[10px] font-medium">{label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+    </>
+  );
+}

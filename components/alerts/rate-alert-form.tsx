@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { NormalizedRatesResponse } from '@/modules/rates/types';
 import { Bell, ShieldCheck, Info, Trash2 } from 'lucide-react';
+import { useRatesStore } from '@/modules/rates/store';
+import { CURRENCY_SYMBOLS } from '@/config/providers';
 
 const AlertSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -17,23 +19,28 @@ const AlertSchema = z.object({
 type AlertFormData = z.infer<typeof AlertSchema>;
 
 export function RateAlertForm() {
+  const { sourceCurrency, targetCurrency } = useRatesStore();
+  const srcSymbol = CURRENCY_SYMBOLS[sourceCurrency] || sourceCurrency;
+  const tgtSymbol = CURRENCY_SYMBOLS[targetCurrency] || targetCurrency;
+
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [activeAlerts, setActiveAlerts] = useState<{id: string, rate: number, currency: string}[]>([
-    { id: '1', rate: 2100, currency: 'NGN' }
+  const [activeAlerts, setActiveAlerts] = useState<{id: string, rate: number, source: string, target: string}[]>([
+    // Removed the dummy alert as it might be confusing if they change corridors.
+    // In a real app this would be fetched from the DB based on the email.
   ]);
   
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<AlertFormData>({
     resolver: zodResolver(AlertSchema),
-    defaultValues: { targetRate: 2000 }
+    defaultValues: { targetRate: 1000 }
   });
 
   const { data: latestRates, isLoading: ratesLoading } = useQuery<NormalizedRatesResponse, Error>({
-    queryKey: ['latest_rates_alerts'],
+    queryKey: ['latest_rates_alerts', sourceCurrency, targetCurrency],
     queryFn: async () => {
       const res = await fetch('/api/rates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sourceCurrency: 'GBP', targetCurrency: 'NGN', amount: 100 })
+        body: JSON.stringify({ sourceCurrency, targetCurrency, amount: 100 })
       });
       if (!res.ok) throw new Error('Failed to fetch rates');
       return res.json();
@@ -41,7 +48,7 @@ export function RateAlertForm() {
     staleTime: 600000,
   });
 
-  const currentBestRate = latestRates?.rates?.[0]?.exchangeRate || 1950;
+  const currentBestRate = latestRates?.rates?.[0]?.exchangeRate || 0;
 
   const onSubmit = async (data: AlertFormData) => {
     try {
@@ -51,15 +58,15 @@ export function RateAlertForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data,
-          sourceCurrency: 'GBP',
-          targetCurrency: 'NGN',
+          sourceCurrency,
+          targetCurrency,
         })
       });
       
       if (!res.ok) throw new Error('Failed to create alert');
       
-      setSuccessMsg(`Alert set! We'll email you when the rate hits ₦${data.targetRate}`);
-      setActiveAlerts(prev => [...prev, { id: Math.random().toString(), rate: data.targetRate, currency: 'NGN' }]);
+      setSuccessMsg(`Alert set! We'll email you when the rate hits ${tgtSymbol}${data.targetRate}`);
+      setActiveAlerts(prev => [...prev, { id: Math.random().toString(), rate: data.targetRate, source: sourceCurrency, target: targetCurrency }]);
       reset();
       
       setTimeout(() => setSuccessMsg(null), 5000);
@@ -86,7 +93,7 @@ export function RateAlertForm() {
           </div>
           <div>
             <h2 className="font-display text-xl font-bold">Create Rate Alert</h2>
-            <p className="text-sm text-muted-foreground">GBP to NGN</p>
+            <p className="text-sm text-muted-foreground">{sourceCurrency} to {targetCurrency}</p>
           </div>
         </div>
 
@@ -94,7 +101,7 @@ export function RateAlertForm() {
             <div>
               <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">Current Best Rate</div>
               <div className="text-xl font-bold">
-                {ratesLoading ? <span className="animate-pulse">Loading...</span> : `£1 = ₦${currentBestRate.toLocaleString()}`}
+                {ratesLoading ? <span className="animate-pulse">Loading...</span> : `${srcSymbol}1 = ${tgtSymbol}${currentBestRate.toLocaleString()}`}
               </div>
             </div>
             <div className="text-right">
@@ -122,9 +129,9 @@ export function RateAlertForm() {
               {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
             </div>
             <div>
-              <label className="text-sm font-medium mb-1.5 block">Target Rate (₦)</label>
+              <label className="text-sm font-medium mb-1.5 block">Target Rate ({tgtSymbol})</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">₦</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">{tgtSymbol}</span>
                 <input 
                   {...register('targetRate', { valueAsNumber: true })}
                   type="number" 
@@ -172,7 +179,9 @@ export function RateAlertForm() {
               No active alerts yet.
             </motion.div>
           ) : (
-            activeAlerts.map(alert => (
+            activeAlerts.map(alert => {
+              const alertTgtSymbol = CURRENCY_SYMBOLS[alert.target] || alert.target;
+              return (
               <motion.div 
                 key={alert.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -185,8 +194,8 @@ export function RateAlertForm() {
                     <Info className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">GBP to {alert.currency}</div>
-                    <div className="font-bold text-lg">Target: ₦{alert.rate.toLocaleString()}</div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{alert.source} to {alert.target}</div>
+                    <div className="font-bold text-lg">Target: {alertTgtSymbol}{alert.rate.toLocaleString()}</div>
                   </div>
                 </div>
                 <button 
@@ -196,7 +205,8 @@ export function RateAlertForm() {
                   <Trash2 className="w-4 h-4" />
                 </button>
               </motion.div>
-            ))
+            )}
+            )
           )}
         </AnimatePresence>
       </div>
