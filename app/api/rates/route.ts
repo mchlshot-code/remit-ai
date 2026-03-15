@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import { fetchAllProviders, fetchBaseRate, fetchParallelRate } from '../../../modules/rates/fetchers';
 import { normalizeAndCompare } from '../../../modules/rates/normalizer';
-import { NormalizedRatesResponse } from '../../../modules/rates/types';
+import { cacheRateSnapshot } from '../../../modules/rates/cache-service';
 
 const RequestSchema = z.object({
   sourceCurrency: z.string().min(3).max(3).toUpperCase().default('GBP'),
@@ -10,7 +10,7 @@ const RequestSchema = z.object({
   amount: z.number().positive().default(500),
 });
 
-export async function POST(req: NextRequest): Promise<NextResponse<NormalizedRatesResponse | { error: string; code: string }>> {
+export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
         const parsed = RequestSchema.parse(body);
@@ -20,6 +20,15 @@ export async function POST(req: NextRequest): Promise<NextResponse<NormalizedRat
         const result = normalizeAndCompare(rawRates, parsed.sourceCurrency);
         
         const parallelRateEstimate = await fetchParallelRate(parsed.sourceCurrency, parsed.targetCurrency, baseRate);
+
+        // Persist rate snapshot to Supabase cache (triggers DB webhook → check-price-alerts)
+        const currencyPair = `${parsed.sourceCurrency}_${parsed.targetCurrency}`;
+        cacheRateSnapshot(
+            currencyPair,
+            baseRate,
+            parallelRateEstimate?.estimatedParallelRate || null,
+            parallelRateEstimate?.source || 'jsdelivr'
+        ).catch(err => console.error('Cache write failed (non-blocking):', err));
 
         return NextResponse.json({ 
             baseRate,

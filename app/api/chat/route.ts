@@ -20,7 +20,14 @@ const ChatRequestSchema = z.object({
     transferSpeed: z.string(),
     isBestRate: z.boolean(),
     link: z.string(),
-  })).default([])
+  })).default([]),
+  baseRate: z.number().optional(),
+  parallelRateEstimate: z.object({
+    estimatedParallelRate: z.number(),
+    premiumPercent: z.number(),
+    disclaimer: z.string(),
+    source: z.string(),
+  }).nullable().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -28,7 +35,11 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsed = ChatRequestSchema.parse(body);
 
-    const systemPrompt = buildSystemPrompt(parsed.currentRates);
+    const systemPrompt = buildSystemPrompt({
+      rates: parsed.currentRates,
+      baseRate: parsed.baseRate,
+      parallelRateEstimate: parsed.parallelRateEstimate,
+    });
 
     const stream = await anthropic.messages.create({
       model: 'claude-3-5-sonnet-20241022', // Agent.md specifies newest sonnet

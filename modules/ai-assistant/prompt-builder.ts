@@ -1,32 +1,40 @@
-import { RateResult } from '../rates/types';
-import { calculateParallelRate } from '../rates/normalizer';
+import { RateResult, ParallelRateEstimate } from '../rates/types';
 
-export function buildSystemPrompt(currentRates: RateResult[]): string {
+interface PromptRateContext {
+  rates: RateResult[];
+  parallelRateEstimate?: ParallelRateEstimate | null;
+  baseRate?: number;
+}
+
+export function buildSystemPrompt(context: PromptRateContext): string {
   const now = new Date().toLocaleString();
+  const { rates, parallelRateEstimate, baseRate } = context;
   
-  // Try to find the base rate (usually injected by our own rate engine)
-  const gbpToNgnRate = currentRates.length > 0 ? currentRates[0].exchangeRate : 1950;
+  const gbpToNgnRate = baseRate || (rates.length > 0 ? rates[0].exchangeRate : 1950);
   
-  // Re-calculate the parallel street estimate to give the AI proper context
-  const parallelEstimate = calculateParallelRate(gbpToNgnRate);
-  
-  const ratesContext = currentRates.map(r => 
+  const ratesContext = rates.map(r => 
     `- **${r.provider}**: Sends £${r.sendAmount.toFixed(2)}, Recipient Gets ₦${r.receiveAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}. 
       Speed: ${r.transferSpeed}. Fee: £${r.fee.toFixed(2)}. Exchange Rate used: £1 = ₦${r.exchangeRate.toFixed(2)}`
   ).join('\n');
+
+  let parallelContext = '';
+  if (parallelRateEstimate) {
+    parallelContext = `
+CRITICAL DUAL-RATE CONTEXT:
+The official bank rate is around £1 = ₦${gbpToNgnRate.toFixed(2)}.
+However, the reality on the ground in Nigeria is the PARALLEL MARKET (street) rate.
+The live parallel market rate is ~₦${parallelRateEstimate.estimatedParallelRate.toLocaleString()} (a ${parallelRateEstimate.premiumPercent}% premium).
+Source: ${parallelRateEstimate.source}
+You must use this knowledge to explain why recipients might actually get less purchasing power if they convert via official bank channels versus holding hard currency, though you should focus primarily on the remittance providers available in your live data context.
+`;
+  }
 
   return `
 You are RemitAI Assistant, a friendly and knowledgeable financial guide specializing in international money transfers and remittances, particularly focused on sending money to Nigeria.
 
 You have access to LIVE rate data as of ${now}:
 ${ratesContext}
-
-CRITICAL DUAL-RATE CONTEXT:
-The official bank rate is around £1 = ₦${gbpToNgnRate.toFixed(2)}.
-However, the reality on the ground in Nigeria is the PARALLEL MARKET (street) rate.
-The estimated parallel market rate is ~₦${parallelEstimate.estimatedParallelRate.toLocaleString()} (a ${parallelEstimate.premiumPercent}% premium).
-You must use this knowledge to explain why recipients might actually get less purchasing power if they convert via official bank channels versus holding hard currency, though you should focus primarily on the remittance providers available in your live data context.
-
+${parallelContext}
 Your role:
 - Help users understand which provider is best for their specific situation based EXCLUSIVELY on the live rate data provided above.
 - Explain fees, exchange rates, and transfer speeds in plain, simple language.

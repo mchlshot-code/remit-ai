@@ -2,51 +2,139 @@
 // eslint-disable-next-line @typescript-eslint/no-namespace
 declare const Deno: {
   serve(handler: (req: Request) => Response | Promise<Response>): void;
+  env: { get(key: string): string | undefined };
 };
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+// @ts-ignore — JSR imports resolve in Supabase Edge Runtime (Deno), not in Node TS
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
 /**
  * check-price-alerts
  * 
- * This Edge Function is designed to be triggered by a Database Webhook
- * whenever a new row is inserted into the `exchange_rate_cache` table.
- * 
- * Flow:
- * 1. Webhook fires on INSERT into `exchange_rate_cache`
- * 2. This function reads the new official/parallel rates from the payload
- * 3. Queries all active, untriggered alerts for the matching currency_pair
- * 4. For each alert where the new rate >= target_rate:
- *    a. Mark the alert as triggered (is_triggered = true, triggered_at = now())
- *    b. Send a notification email via Resend
- * 
- * Environment variables required:
- * - SUPABASE_URL
- * - SUPABASE_SERVICE_ROLE_KEY
- * - RESEND_API_KEY
+ * Triggered by a Database Webhook on INSERT into `exchange_rate_cache`.
+ * Queries active, untriggered alerts for the matching currency_pair,
+ * marks matches as triggered, and sends notification emails via Resend.
  */
 
 Deno.serve(async (req: Request) => {
   try {
     const payload = await req.json();
-    const { record } = payload; // Database webhook payload shape
+    const { record } = payload;
 
-    // TODO: Implement alert matching logic
-    // 1. Create Supabase client with service role key
-    // 2. Query active alerts matching record.currency_pair
-    // 3. Compare record.official_rate against each alert's target_rate
-    // 4. Trigger matched alerts and send email notifications
+    if (!record?.currency_pair || !record?.official_rate) {
+      return new Response(
+        JSON.stringify({ message: "No valid cache record in payload" }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
-    console.log(`[check-price-alerts] New cache entry for ${record?.currency_pair}:`, {
-      official_rate: record?.official_rate,
-      parallel_rate: record?.parallel_rate,
-    });
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // 1. Find all active, untriggered alerts matching this currency pair
+    const { data: matchedAlerts, error: fetchError } = await supabase
+      .from("user_price_alerts")
+      .select("*")
+      .eq("currency_pair", record.currency_pair)
+      .eq("is_active", true)
+      .eq("is_triggered", false)
+      .lte("target_rate", record.official_rate);
+
+    if (fetchError) {
+      console.error("[check-price-alerts] Query error:", fetchError);
+      return new Response(
+        JSON.stringify({ error: "Failed to query alerts" }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!matchedAlerts || matchedAlerts.length === 0) {
+      console.log(`[check-price-alerts] No alerts triggered for ${record.currency_pair} at rate ${record.official_rate}`);
+      return new Response(
+        JSON.stringify({ message: "No alerts triggered", processed: 0 }),
+        { headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`[check-price-alerts] ${matchedAlerts.length} alert(s) triggered for ${record.currency_pair}`);
+
+    // 2. Mark matched alerts as triggered
+    const ids = matchedAlerts.map((a: { id: string }) => a.id);
+    const { error: updateError } = await supabase
+      .from("user_price_alerts")
+      .update({
+        is_triggered: true,
+        triggered_at: new Date().toISOString(),
+        current_rate: record.official_rate,
+        is_active: false,
+      })
+      .in("id", ids);
+
+    if (updateError) {
+      console.error("[check-price-alerts] Update error:", updateError);
+    }
+
+    // 3. Send notification emails via Resend
+    if (resendApiKey) {
+      for (const alert of matchedAlerts) {
+        const [fromCurrency, toCurrency] = (alert.currency_pair as string).split("_");
+        const currencySymbol = fromCurrency === "GBP" ? "£" : fromCurrency === "USD" ? "$" : fromCurrency;
+
+        try {
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${resendApiKey}`,
+            },
+            body: JSON.stringify({
+              from: "RemitAI <alerts@remitai.app>",
+              to: alert.email,
+              subject: `🎯 Rate Alert Triggered! ${fromCurrency}→${toCurrency} hit your target`,
+              html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                  <h1 style="color: #10b981;">Your rate alert was triggered!</h1>
+                  <p>You set a target of <strong>${currencySymbol}1 = ₦${alert.target_rate}</strong> for ${fromCurrency}→${toCurrency}.</p>
+                  
+                  <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; margin: 24px 0;">
+                    <p style="margin: 0; color: #166534; font-size: 14px; text-transform: uppercase; font-weight: bold;">Current Rate</p>
+                    <h2 style="margin: 8px 0 0 0; color: #15803d; font-size: 32px;">${currencySymbol}1 = ₦${record.official_rate}</h2>
+                    ${record.parallel_rate ? `<p style="margin: 8px 0 0 0; color: #92400e; font-size: 14px;">Street estimate: ~₦${record.parallel_rate}</p>` : ''}
+                  </div>
+
+                  <p>Rates change quickly. Compare providers and lock in this rate now.</p>
+                  
+                  <a href="https://remitai.app" style="display: inline-block; background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 16px;">
+                    Compare Rates Now
+                  </a>
+                  
+                  <p style="margin-top: 32px; font-size: 12px; color: #6b7280;">
+                    You received this because you set up a rate alert on RemitAI.<br>
+                    Rates and fees are subject to change. Please verify the final amount on the provider's website.
+                  </p>
+                </div>
+              `,
+            }),
+          });
+          console.log(`[check-price-alerts] Email sent to ${alert.email}`);
+        } catch (emailErr) {
+          console.error(`[check-price-alerts] Email failed for ${alert.email}:`, emailErr);
+        }
+      }
+    } else {
+      console.warn("[check-price-alerts] RESEND_API_KEY not set, skipping emails");
+    }
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         message: "Alert check complete",
-        currency_pair: record?.currency_pair,
-        processed: true 
+        currency_pair: record.currency_pair,
+        triggered: matchedAlerts.length,
+        processed: true,
       }),
       { headers: { "Content-Type": "application/json" } }
     );

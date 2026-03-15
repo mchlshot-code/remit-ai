@@ -1,4 +1,4 @@
-import { RateResult, NormalizedRatesResponse, ParallelRateEstimate } from './types';
+import { RateResult, NormalizedRatesResponse } from './types';
 
 export function normalizeAndCompare(results: RateResult[], sourceCurrency: string): NormalizedRatesResponse {
     if (!results.length) return { rates: [], savingsMessage: null };
@@ -18,12 +18,8 @@ export function normalizeAndCompare(results: RateResult[], sourceCurrency: strin
     // 3. Compute savings vs worst rate
     let savingsMessage = null;
     if (sorted.length > 1 && bestRate.receiveAmount > worstRate.receiveAmount) {
-        // Calculate how much source currency was saved based on the difference in received amount and the best exchange rate
         const differenceInReceive = bestRate.receiveAmount - worstRate.receiveAmount;
-
-        // Convert the received difference back to the source currency cost equivalent using the best rate
         const savingsInSource = differenceInReceive / bestRate.exchangeRate;
-
         const currencySymbol = sourceCurrency === 'GBP' ? '£' : sourceCurrency === 'USD' ? '$' : sourceCurrency;
         savingsMessage = `You save ${currencySymbol}${savingsInSource.toFixed(2)} vs worst rate`;
     }
@@ -32,17 +28,4 @@ export function normalizeAndCompare(results: RateResult[], sourceCurrency: strin
         rates: processedRates,
         savingsMessage
     };
-}
-
-export function calculateParallelRate(officialRate: number): ParallelRateEstimate {
-  const PARALLEL_PREMIUM_MIN = 0.08;  // 8% above official
-  const PARALLEL_PREMIUM_MAX = 0.15;  // 15% above official
-  const midPremium = (PARALLEL_PREMIUM_MIN + PARALLEL_PREMIUM_MAX) / 2;
-
-  return {
-    estimatedParallelRate: Math.round(officialRate * (1 + midPremium)),
-    premiumPercent: Math.round(midPremium * 100),
-    disclaimer: "Parallel market estimate only. Actual street rates vary. Verify before transacting.",
-    source: "Estimated based on historical parallel market premium (8–15%)"
-  };
 }

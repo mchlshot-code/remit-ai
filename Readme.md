@@ -281,3 +281,9 @@ MIT License — see [LICENSE](./LICENSE)
 ---
 
 *Built as part of the 3MTT Knowledge Showcase — solving real problems with AI.*
+
+# Add this to your README.md under a Known Issues section
+## Security Notes
+# Next.js DoS vulnerabilities (GHSA-9g9p-9gw9-jx7f, GHSA-h25m-26qc-wcjf)
+# Not applicable — deployed on Vercel (not self-hosted)
+# Upgrade to Next.js 16 post-showcase

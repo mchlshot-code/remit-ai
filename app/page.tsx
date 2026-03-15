@@ -6,12 +6,22 @@ import { RateInputForm, RateFormData } from '@/components/rates/rate-input-form'
 import { ComparisonTable } from '@/components/rates/comparison-table';
 import { useQuery } from '@tanstack/react-query';
 import { NormalizedRatesResponse } from '@/modules/rates/types';
+import { useRatesStore } from '@/modules/rates/store';
+import { RateDualDisplayContainer } from '@/components/rate-dual-display-container';
+import { RateAlertForm } from '@/components/alerts/rate-alert-form';
 
 export default function LandingPage() {
+  const { 
+    setHasSearched, 
+    setSourceCurrency, 
+    setTargetCurrency, 
+    setAmount 
+  } = useRatesStore();
+  
   const [requestData, setRequestData] = useState<RateFormData | null>(null);
 
   const { data, isLoading, error } = useQuery<NormalizedRatesResponse, Error>({
-    queryKey: ['rates', requestData],
+    queryKey: ['rates', requestData?.sourceCurrency, requestData?.targetCurrency, requestData?.amount],
     queryFn: async () => {
       if (!requestData) return { rates: [], savingsMessage: null };
       const res = await fetch('/api/rates', {
@@ -25,11 +35,15 @@ export default function LandingPage() {
       }
       return res.json();
     },
-    enabled: !!requestData, // Only run the query if we have form data submitted
+    enabled: !!requestData,
   });
 
   const onSubmit = (formData: RateFormData) => {
     setRequestData(formData);
+    setHasSearched(true);
+    setSourceCurrency(formData.sourceCurrency);
+    setTargetCurrency(formData.targetCurrency);
+    setAmount(formData.amount);
   };
 
   return (
@@ -54,13 +68,29 @@ export default function LandingPage() {
 
         <RateInputForm onSubmit={onSubmit} isLoading={isLoading} />
         
+        <RateDualDisplayContainer />
+
         {/* Render Results when not empty, otherwise keep UI clean */}
         {(requestData || isLoading || error) && (
+          <div className="w-full flex flex-col items-center gap-12 mt-8">
             <ComparisonTable 
               data={data || null} 
               isLoading={isLoading} 
               error={error?.message || null} 
             />
+            
+            {data && data.rates.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="w-full"
+              >
+                <div className="w-full h-px bg-border max-w-3xl mx-auto mb-12" />
+                <RateAlertForm />
+              </motion.div>
+            )}
+          </div>
         )}
       </section>
     </main>
