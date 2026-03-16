@@ -74,7 +74,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col items-center">
       {/* Hero Section */}
-      <section className="w-full max-w-5xl px-5 py-20 flex flex-col items-center text-center">
+      <section className="w-full max-w-5xl px-5 pt-20 pb-10 md:pb-20 flex flex-col items-center text-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}

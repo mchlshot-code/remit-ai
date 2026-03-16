@@ -50,70 +50,66 @@ export function RateInputForm({ onSubmit, isLoading, defaultSource = 'GBP', defa
   return (
     <motion.form 
       onSubmit={handleSubmit(onSubmit)}
-      className="w-full max-w-4xl bg-card border shadow-sm rounded-2xl p-4 md:p-6 mb-16 flex flex-col md:flex-row gap-4 items-start md:items-end"
+      className="w-full max-w-lg bg-card border shadow-xl rounded-3xl p-5 md:p-8 mb-8 md:mb-16 flex flex-col gap-4"
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.2 }}
     >
-      <div className="flex-1 w-full flex gap-2">
-        <div className="w-24 md:w-28">
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">From</label>
+      {/* Row 1: From | To */}
+      <div className="grid grid-cols-2 gap-3 mb-1">
+        <div className="flex flex-col">
+          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1">From</label>
           <select
               value={sourceCurrency}
               onChange={handleSourceChange}
               disabled={isLoading}
-              className="w-full h-14 px-2 rounded-xl border bg-background font-medium focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+              className="w-full h-14 px-4 rounded-2xl border bg-background font-bold text-lg focus:ring-2 focus:ring-emerald-500 outline-none transition-all appearance-none cursor-pointer"
           >
               {availableSources.map(src => (
                   <option key={src} value={src}>{src}</option>
               ))}
           </select>
         </div>
-        <div className="flex-1">
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Amount</label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-medium">{currencySymbol}</span>
-            <input 
-              type="number"
+        <div className="flex flex-col">
+          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1">To</label>
+          <select
+              {...register('targetCurrency')}
               disabled={isLoading}
-              {...register('amount', { valueAsNumber: true })}
-              className={`w-full h-14 pl-10 pr-4 rounded-xl border bg-background text-xl font-medium focus:ring-2 focus:ring-emerald-500 outline-none transition-all ${errors.amount ? 'border-destructive' : 'border-border'}`}
-            />
-          </div>
-          {errors.amount && <span className="text-xs text-destructive mt-1 block">{errors.amount.message}</span>}
+              className="w-full h-14 px-4 rounded-2xl border bg-background font-bold text-lg focus:ring-2 focus:ring-emerald-500 outline-none transition-all appearance-none cursor-pointer"
+          >
+              {['NGN', 'GHS', 'KES', 'UGX', 'TZS', 'ZAR'].map(tgt => (
+                  <option key={tgt} value={tgt}>{tgt}</option>
+              ))}
+          </select>
         </div>
       </div>
-      
-      <div className="flex-1 w-full hidden md:flex gap-2">
-        <div className="w-24 md:w-28">
-           <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">To</label>
-           <select
-                {...register('targetCurrency')}
-                disabled={isLoading}
-                className="w-full h-14 px-2 rounded-xl border bg-background font-medium focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-            >
-                {availableTargets.map(tgt => (
-                    <option key={tgt} value={tgt}>{tgt}</option>
-                ))}
-            </select>
+
+      {/* Row 2: Amount */}
+      <div className="w-full">
+        <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1 block">Amount to Send</label>
+        <div className="relative">
+          <span className="absolute left-5 top-1/2 -translate-y-1/2 text-xl font-bold text-foreground/50">{currencySymbol}</span>
+          <input 
+            type="number"
+            disabled={isLoading}
+            {...register('amount', { valueAsNumber: true })}
+            className={`w-full h-16 pl-12 pr-5 rounded-2xl border bg-background text-2xl font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all ${errors.amount ? 'border-destructive' : 'border-border'}`}
+            placeholder="0.00"
+          />
         </div>
-        <div className="flex-1">
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Recipient Gets</label>
-          <div className="h-14 flex items-center px-4 rounded-xl border border-transparent bg-muted/50 text-xl font-medium text-muted-foreground">
-            Auto-calculated
-          </div>
-        </div>
+        {errors.amount && <span className="text-xs text-destructive mt-2 px-1 block">{errors.amount.message}</span>}
       </div>
       
+      {/* Row 3: Button */}
       <button 
         type="submit"
         disabled={isLoading}
-        className="h-14 px-8 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-semibold transition-all w-full md:w-auto mt-4 md:mt-0 shadow-sm disabled:opacity-50 flex items-center justify-center min-w-[160px]"
+        className="h-16 px-8 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white font-bold text-lg transition-all w-full mt-2 shadow-lg shadow-emerald-500/20 disabled:opacity-50 flex items-center justify-center"
       >
         {isLoading ? (
-          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
         ) : (
-          'Compare Live'
+          'Compare Live Rates'
         )}
       </button>
     </motion.form>
