@@ -13,6 +13,8 @@ import { RateDualDisplayContainer } from '@/components/rate-dual-display-contain
 import { RateAlertForm } from '@/components/alerts/rate-alert-form';
 import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
+import { CORRIDORS } from '@/config/seo-corridors';
+import { TrendingUp, ArrowRight } from 'lucide-react';
 
 export default function Home() {
   const { 
@@ -71,6 +73,12 @@ export default function Home() {
     });
   };
 
+  const { data: trendingRates } = useQuery<{ rates: { pair: string; rate: number | null }[] }>({
+    queryKey: ['trending-rates'],
+    queryFn: () => fetch('/api/rates/trending').then(res => res.json()),
+    refetchInterval: 1800000, // 30 mins
+  });
+
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col items-center">
       {/* Hero Section */}
@@ -100,6 +108,51 @@ export default function Home() {
             </Link>
           </div>
         </motion.div>
+
+        {/* Popular Corridors Section */}
+        <div className="w-full mb-20">
+          <div className="flex items-center justify-between mb-8 px-4">
+            <h2 className="text-2xl font-bold text-foreground">Compare Live Rates by Corridor</h2>
+            <div className="flex items-center gap-2 text-emerald-500 font-medium text-sm">
+              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              Live Updates
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4 text-left">
+            {CORRIDORS.map((corridor) => {
+              const rateInfo = trendingRates?.rates.find(r => r.pair === `${corridor.from}-${corridor.to}`);
+              return (
+                <Link 
+                  key={`${corridor.from}-${corridor.to}`}
+                  href={`/compare/${corridor.from.toLowerCase()}-to-${corridor.to.toLowerCase()}`}
+                  className="group bg-card border rounded-2xl p-6 hover:border-emerald-500/50 hover:shadow-lg transition-all"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-2xl">{corridor.fromFlag}</span>
+                      <TrendingUp className="w-4 h-4 text-muted-foreground/30" />
+                      <span className="text-2xl">{corridor.toFlag}</span>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
+                  </div>
+                  
+                  <h3 className="font-bold text-lg mb-1">{corridor.from} → {corridor.to}</h3>
+                  <p className="text-xs text-muted-foreground mb-4">{corridor.fromCountry} to {corridor.toCountry}</p>
+                  
+                  <div className="pt-4 border-t border-border mt-auto">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-1">Market Rate</p>
+                    <p className="text-lg font-black text-emerald-600">
+                      1 {corridor.from} = <span className="text-xl">
+                        {rateInfo?.rate ? rateInfo.rate.toFixed(2) : '---'}
+                      </span> {corridor.to}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
 
         <RateInputForm onSubmit={onSubmit} isLoading={isLoading} />
         

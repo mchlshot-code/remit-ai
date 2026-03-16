@@ -15,13 +15,13 @@ const FormSchema = z.object({
 export type RateFormData = z.infer<typeof FormSchema>;
 
 interface Props {
-  onSubmit: (data: RateFormData) => void;
-  isLoading: boolean;
+  onSubmit?: (data: RateFormData) => void;
+  isLoading?: boolean;
   defaultSource?: string;
   defaultTarget?: string;
 }
 
-export function RateInputForm({ onSubmit, isLoading, defaultSource = 'GBP', defaultTarget = 'NGN' }: Props) {
+export function RateInputForm({ onSubmit, isLoading = false, defaultSource = 'GBP', defaultTarget = 'NGN' }: Props) {
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<RateFormData>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -48,7 +48,14 @@ export function RateInputForm({ onSubmit, isLoading, defaultSource = 'GBP', defa
 
   return (
     <motion.form 
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit((data) => {
+        if (onSubmit) {
+          onSubmit(data);
+        } else {
+          // Default behavior: redirect to compare page
+          window.location.href = `/compare/${data.sourceCurrency.toLowerCase()}-to-${data.targetCurrency.toLowerCase()}?amount=${data.amount}`;
+        }
+      })}
       className="w-full max-w-lg bg-card border shadow-xl rounded-3xl p-5 md:p-8 mb-8 md:mb-16 flex flex-col gap-4"
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
