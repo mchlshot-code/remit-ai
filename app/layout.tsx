@@ -14,7 +14,7 @@ const syne = Syne({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#10b981",
+  themeColor: "#00C985",
 };
 
 export const metadata: Metadata = {
@@ -27,8 +27,8 @@ export const metadata: Metadata = {
     title: "RemitAI",
   },
   icons: {
-    apple: "/icons/icon-192x192.png",
-    icon: "/icons/icon-192x192.png",
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
   },
   verification: {
     google: "c630bc1fae49648a",
