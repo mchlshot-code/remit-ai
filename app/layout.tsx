@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Syne } from "next/font/google";
 import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 import Providers from "../components/providers";
 import { Navigation } from "@/components/navigation";
+import { InstallPrompt } from "@/components/install-prompt";
 import Link from 'next/link';
 
 const syne = Syne({ 
@@ -12,9 +13,22 @@ const syne = Syne({
   weight: ["400", "500", "600", "700", "800"],
 });
 
+export const viewport: Viewport = {
+  themeColor: "#10b981",
+};
+
 export const metadata: Metadata = {
   title: "RemitAI - Compare Remittance Rates",
   description: "Find the best remittance rates in real-time.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "RemitAI",
+  },
+  icons: {
+    apple: "/icons/icon-192x192.png",
+  },
 };
 
 export default function RootLayout({
@@ -28,6 +42,7 @@ export default function RootLayout({
         <Providers>
           <div className="flex min-h-screen flex-col font-sans">
             <Navigation />
+            <InstallPrompt />
             <div className="flex-1 pb-16 md:pb-0">
               {children}
             </div>

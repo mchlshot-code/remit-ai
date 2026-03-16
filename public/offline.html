@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RemitAI - Offline</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #ffffff;
+            color: #1a1a1b;
+            text-align: center;
+        }
+        .container {
+            max-width: 400px;
+            padding: 2rem;
+        }
+        .logo {
+            color: #10b981;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+        }
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        p {
+            color: #6b7280;
+            line-height: 1.5;
+            margin-bottom: 2rem;
+        }
+        .btn {
+            background-color: #10b981;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        .btn:hover {
+            background-color: #059669;
+        }
+        .offline-stats {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: #f3f4f6;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">RemitAI</div>
+        <h1>You're offline</h1>
+        <p>It looks like you don't have an active internet connection. Please check your network and try again.</p>
+        <p>Showing last known rates if available.</p>
+        <a href="/" class="btn">Try Again</a>
+        <div class="offline-stats" id="last-rates">
+            Loading last known rates...
+        </div>
+    </div>
+    <script>
+        // Simple script to show last cached rates if available in localStorage or similar
+        // For now, it's a placeholder
+        document.getElementById('last-rates').innerText = "Last checked: " + new Date().toLocaleString();
+    </script>
+</body>
+</html>

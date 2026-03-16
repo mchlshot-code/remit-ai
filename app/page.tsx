@@ -74,7 +74,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col items-center">
       {/* Hero Section */}
-      <section className="w-full max-w-5xl px-6 py-20 flex flex-col items-center text-center">
+      <section className="w-full max-w-5xl px-5 py-20 flex flex-col items-center text-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -83,7 +83,7 @@ export default function Home() {
           <span className="inline-block py-1 px-3 rounded-full bg-emerald-500/10 text-emerald-500 text-sm font-medium mb-6">
             Live Rates. Zero Hidden Agendas.
           </span>
-          <h1 className="font-display text-5xl md:text-7xl font-extrabold tracking-tight mb-6 text-balance">
+          <h1 className="font-display text-[2.4rem] leading-[1.05] md:text-7xl font-extrabold tracking-tight mb-6 text-balance px-4">
             Send Money Smarter. <span className="text-emerald-500">Understand the Real Value.</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">

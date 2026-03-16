@@ -138,7 +138,7 @@ export function Navigation() {
       </header>
 
       {/* Mobile Bottom Tab Navigation */}
-      <nav className="flex md:hidden fixed bottom-0 left-0 right-0 h-16 bg-background border-t z-50 items-center justify-around pb-safe">
+      <nav className="flex md:hidden fixed bottom-0 left-0 right-0 h-16 bg-background border-t z-50 items-center grid grid-cols-3 w-full pb-safe md:pb-5">
         {links.map(({ href, label, icon: Icon, onClick }) => {
           const isActive = pathname === href;
           return (
@@ -146,7 +146,7 @@ export function Navigation() {
               key={href}
               href={href}
               onClick={onClick}
-              className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
+              className={`flex flex-col items-center justify-center p-3 gap-1 w-full h-full transition-colors ${
                 isActive ? 'text-emerald-500' : 'text-muted-foreground'
               }`}
             >
