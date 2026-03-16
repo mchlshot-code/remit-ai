@@ -36,7 +36,6 @@ export function RateInputForm({ onSubmit, isLoading, defaultSource = 'GBP', defa
   const currencySymbol = CURRENCY_SYMBOLS[sourceCurrency] || sourceCurrency;
 
   const availableSources = Array.from(new Set(SUPPORTED_CORRIDORS.map(c => c.from)));
-  const availableTargets = SUPPORTED_CORRIDORS.filter(c => c.from === sourceCurrency).map(c => c.to);
 
   const handleSourceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
       const newSource = e.target.value;
