@@ -120,12 +120,11 @@ export function Navigation() {
       </header>
 
       {/* Mobile Top Header */}
-      <header className="flex md:hidden border-b h-14 items-center justify-between px-4 bg-background/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="w-8" /> {/* Spacer */}
-        <Link href="/" className="font-display font-bold text-lg text-emerald-600">
+      <header className="flex md:hidden border-b h-14 items-center justify-center px-4 bg-background/80 backdrop-blur-md sticky top-0 z-50">
+        <Link href="/" className="font-display font-bold text-lg text-emerald-600 text-center w-full">
           RemitAI
         </Link>
-        <div className="flex items-center">
+        <div className="absolute right-4 flex items-center">
           {user && (
              <button 
                 onClick={handleSignOut}

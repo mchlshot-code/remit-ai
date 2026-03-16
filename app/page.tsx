@@ -79,14 +79,15 @@ export default function Home() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
+          className="w-full flex flex-col items-center"
         >
           <span className="inline-block py-1 px-3 rounded-full bg-emerald-500/10 text-emerald-500 text-sm font-medium mb-6">
             Live Rates. Zero Hidden Agendas.
           </span>
-          <h1 className="font-display text-[2.4rem] leading-[1.05] md:text-7xl font-extrabold tracking-tight mb-6 text-balance px-4">
+          <h1 className="font-display hero-heading font-extrabold tracking-tight mb-6 text-balance px-4 text-center">
             Send Money Smarter. <span className="text-emerald-500">Understand the Real Value.</span>
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-sm md:max-w-2xl mx-auto mb-8 px-5 md:px-0">
             Compare live official rates with estimated parallel market reality. So you can ensure your family receives exactly what they deserve.
           </p>
           <div className="flex justify-center mb-10">

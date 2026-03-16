@@ -36,6 +36,13 @@ const withPWA = withPWAInit({
       },
     },
     {
+      urlPattern: /\/icons\/.*\.png$/,
+      handler: "StaleWhileRevalidate",
+      options: {
+        cacheName: "pwa-icons",
+      },
+    },
+    {
       urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*/i,
       handler: "CacheFirst",
       options: {

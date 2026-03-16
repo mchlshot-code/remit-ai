@@ -38,3 +38,5 @@ next-env.d.ts
 # docs
 Scaffold.md
 Philosophy.md
+
+.vscode

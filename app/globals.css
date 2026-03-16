@@ -16,6 +16,11 @@
       padding-bottom: env(safe-area-inset-bottom);
     }
   }
+  .hero-heading {
+    font-size: clamp(1.8rem, 7.5vw, 5rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
 }
 
 html, body {
