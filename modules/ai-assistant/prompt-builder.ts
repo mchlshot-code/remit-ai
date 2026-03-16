@@ -1,5 +1,5 @@
 import { RateResult, ParallelRateEstimate } from '../rates/types';
-import { CURRENCY_SYMBOLS } from '@/config/providers';
+import { CURRENCY_SYMBOLS } from '../../config/providers';
 
 interface PromptRateContext {
   rates: RateResult[];
