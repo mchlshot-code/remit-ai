@@ -61,8 +61,15 @@ export function Navigation() {
     <>
       {/* Desktop Header */}
       <header className="hidden md:flex border-b h-16 items-center px-8 bg-background/80 backdrop-blur-md sticky top-0 z-50">
-        <Link href="/" className="font-display font-bold text-xl mr-8 text-emerald-600">
-          RemitAI
+        <Link href="/" className="mr-8 flex items-center">
+          <Image 
+            src="/logo.png" 
+            alt="RemitAI Logo" 
+            width={120} 
+            height={32} 
+            className="h-8 w-auto object-contain"
+            priority
+          />
         </Link>
         <nav className="flex items-center gap-6 flex-1">
           {links.map(({ href, label, icon: Icon, onClick }) => {
@@ -121,8 +128,15 @@ export function Navigation() {
 
       {/* Mobile Top Header */}
       <header className="flex md:hidden border-b h-14 items-center justify-center px-4 bg-background/80 backdrop-blur-md sticky top-0 z-50">
-        <Link href="/" className="font-display font-bold text-lg text-emerald-600 text-center w-full">
-          RemitAI
+        <Link href="/" className="flex items-center justify-center">
+          <Image 
+            src="/logo.png" 
+            alt="RemitAI Logo" 
+            width={90} 
+            height={24} 
+            className="h-6 w-auto object-contain"
+            priority
+          />
         </Link>
         <div className="absolute right-4 flex items-center">
           {user && (

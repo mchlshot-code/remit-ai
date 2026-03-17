@@ -29,8 +29,7 @@ export const metadata: Metadata = {
     title: "RemitAI",
   },
   icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    icon: '/favicon.png',
   },
   verification: {
     google: "c630bc1fae49648a",
