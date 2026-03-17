@@ -115,7 +115,7 @@ export default async function ReviewPage({ params }: Props) {
               </div>
 
               <Link 
-                href={p.link}
+                href={`/go/${p.provider.toLowerCase().replace(/\s+/g, '')}?corridor=${from}-${to}`}
                 target="_blank"
                 className={`w-full py-4 rounded-xl font-bold text-center block transition-all ${idx === 0 ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
               >

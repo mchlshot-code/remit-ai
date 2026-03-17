@@ -72,7 +72,10 @@ export function ComparisonTable({ data, isLoading, error, sourceCurrency, target
             className={`relative overflow-hidden rounded-2xl border bg-card p-5 md:p-6 transition-all hover:border-emerald-500/50 hover:shadow-md cursor-pointer ${provider.isBestRate ? 'border-emerald-500 ring-1 ring-emerald-500' : ''}`}
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
-            onClick={() => window.open(provider.link, '_blank')}
+            onClick={() => {
+              const slug = provider.provider.toLowerCase().replace(/\s+/g, '');
+              window.open(`/go/${slug}?corridor=${sourceCurrency}-${targetCurrency}`, '_blank');
+            }}
           >
             {provider.isBestRate && (
               <div className="absolute top-0 right-0 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg shadow-sm">
