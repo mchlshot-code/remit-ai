@@ -128,26 +128,34 @@ export default function Home() {
                 <Link 
                   key={`${corridor.from}-${corridor.to}`}
                   href={`/compare/${corridor.from.toLowerCase()}-to-${corridor.to.toLowerCase()}`}
-                  className="group bg-card border rounded-2xl p-6 hover:border-emerald-500/50 hover:shadow-lg transition-all"
+                  className="group bg-card border rounded-2xl p-4 md:p-6 hover:border-emerald-500/50 hover:shadow-lg transition-all flex flex-row items-center justify-between md:flex-col md:items-start"
                 >
-                  <div className="flex justify-between items-start mb-4">
+                  <div className="flex items-center md:items-start md:justify-between w-full md:mb-4 gap-3 md:gap-0">
                     <div className="flex items-center gap-2">
                        <Flag countryCode={CURRENCY_TO_COUNTRY[corridor.from]} size={24} />
-                       <TrendingUp className="w-3 h-3 text-muted-foreground/30" />
+                       <TrendingUp className="w-3 h-3 text-muted-foreground/30 hidden md:block" />
                        <Flag countryCode={CURRENCY_TO_COUNTRY[corridor.to]} size={24} />
                     </div>
-                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
+                    
+                    <div className="flex flex-col md:mt-2">
+                      <h3 className="font-bold text-base md:text-lg">{corridor.from} → {corridor.to}</h3>
+                      <p className="text-[10px] md:text-xs text-muted-foreground hidden md:block">{corridor.fromCountry} to {corridor.toCountry}</p>
+                    </div>
+
+                    <ArrowRight className="w-5 h-5 ml-auto text-muted-foreground group-hover:text-emerald-500 group-hover:translate-x-1 transition-all hidden md:block" />
                   </div>
                   
-                  <h3 className="font-bold text-lg mb-1">{corridor.from} → {corridor.to}</h3>
-                  <p className="text-xs text-muted-foreground mb-4">{corridor.fromCountry} to {corridor.toCountry}</p>
-                  
-                  <div className="pt-4 border-t border-border mt-auto">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-1">Market Rate</p>
-                    <p className="text-lg font-black text-emerald-600">
-                      1 {corridor.from} = <span className="text-xl">
+                  <div className="md:pt-4 md:border-t md:border-border md:w-full mt-0 md:mt-auto text-right md:text-left">
+                    <p className="text-[8px] md:text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-0 md:mb-1">
+                      <span className="md:inline hidden">Market Rate</span>
+                      <span className="md:hidden inline">RATE</span>
+                    </p>
+                    <p className="text-sm md:text-lg font-black text-emerald-600 whitespace-nowrap">
+                      <span className="hidden md:inline">1 {corridor.from} = </span>
+                      <span className="text-base md:text-xl">
                         {rateInfo?.rate ? rateInfo.rate.toFixed(2) : '---'}
-                      </span> {corridor.to}
+                      </span>
+                      <span className="md:inline hidden"> {corridor.to}</span>
                     </p>
                   </div>
                 </Link>
