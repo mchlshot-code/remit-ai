@@ -61,6 +61,17 @@ const withPWA = withPWAInit({
 });
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'remit-ai-app.vercel.app' }],
+        destination: 'https://remitaiapp.com/:path*',
+        permanent: true,
+      },
+    ]
+  },
+};
 
 export default withPWA(nextConfig);
