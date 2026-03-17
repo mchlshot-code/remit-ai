@@ -1,7 +1,7 @@
 # RemitAI 💸
 ### AI-Powered Remittance Comparison & Transfer Assistant
 
-> Compare money transfer providers in real-time, get AI-powered recommendations, and set smart rate alerts — all in one place.
+> End the "silent tax" on your money transfers. Compare providers in real-time, see the **true parallel market rate**, and get honest AI-powered advice — all in one place.
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
 ![Next.js](https://img.shields.io/badge/Next.js-14-black)
@@ -11,11 +11,13 @@
 
 ---
 
-## 🌍 The Problem
+## 🌍 The Mission: Ending the "Silent Tax"
 
-Millions of people send money internationally every day — but most have no idea they're losing money to hidden fees and bad exchange rates. Choosing between Wise, Remitly, WorldRemit, and other providers is confusing and time-consuming.
+Millions of hardworking people send money home every day — but most lose a significant portion to a "silent tax": **hidden fees, bad exchange rates, and confusing choices.**
 
-**RemitAI solves this.** Compare rates across providers in seconds, ask our AI assistant for honest advice, and get notified the moment your target rate hits.
+In corridors like Nigeria, there is a second, deeper layer: the gap between the **official rate** and the **parallel market rate** (the real-world value on the street). This gap can be **10% to 40%**, meaning a person sending £200 might lose ₦10,000+ simply because they couldn't see the full picture.
+
+**RemitAI exists to end that tax.** We provide radical transparency, showing you both the bank rates and the real-world value your family feels.
 
 ---
 
@@ -23,11 +25,10 @@ Millions of people send money internationally every day — but most have no ide
 
 | Feature | Description |
 |---------|-------------|
+| ✨ **Dual-Rate Transparency** | Shows both official and parallel market rates for full clarity |
 | ⚡ **Live Rate Comparison** | Real-time rates from Wise, Remitly, WorldRemit, LemFi & TapTap Send |
 | 🏆 **Best Pick Engine** | Automatically highlights the best provider for your transfer |
-| 🤖 **AI Assistant** | Ask plain-language questions, get honest unbiased answers |
-| 🔔 **Rate Alerts** | Set a target rate and get emailed the moment it's hit |
-| 📈 **SEO Comparison Hub** | 80+ dynamically generated comparison pages via algorithmic permutations |
+| 🤖 **Honest AI Assistant** | Unbiased advice based on live market dynamics, not affiliate deals |
 | 📱 **Mobile First** | Fully responsive, works beautifully on any device |
 | 🌙 **Dark Mode** | Full dark/light mode support |
 
@@ -185,13 +186,13 @@ remit-ai/
 
 ---
 
-## 🤖 AI Assistant
+## 🤖 Honest AI Assistant
 
-The AI assistant is powered by Claude (Anthropic) and has access to **live rate data** in its context. It can:
+Our AI assistant is powered by Claude (Anthropic) and has access to **live market data**, including both official and parallel market rates. It is designed to be a "financial friend" for people like **Ngozi** — hardworking remitters who deserve the truth. It can:
 
 - Recommend the best provider for your specific corridor and amount
-- Explain fees in plain language
-- Compare transfer speeds
+- Explain the **official vs. parallel market gap** in plain language
+- Warn you when rates are unfavorable
 - Advise on timing ("should I send now or wait?")
 - Answer general questions about international transfers
 
@@ -235,6 +236,12 @@ The `vercel.json` includes a cron job for rate alerts:
   ]
 }
 ```
+
+## 🧭 Our Philosophy
+
+> *"Does this help someone send more money home — and do they understand exactly what their money is worth when it gets there?"*
+
+We build for **Ngozi** — the busy nurse or care assistant who doesn't have time to decode FX systems but deserves every kobo of her hard-earned money. We believe in **Radical Transparency**, **Honest AI**, and **Mobile-First** accessibility.
 
 ---
 
