@@ -5,6 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { motion } from 'framer-motion';
 import { SUPPORTED_CORRIDORS, CURRENCY_SYMBOLS } from '@/config/providers';
+import { Flag } from '@/components/ui/flag';
+import { CURRENCY_TO_COUNTRY } from '@/lib/constants';
 
 const FormSchema = z.object({
   sourceCurrency: z.string().min(3).max(3),
@@ -65,28 +67,38 @@ export function RateInputForm({ onSubmit, isLoading = false, defaultSource = 'GB
       <div className="grid grid-cols-2 gap-3 mb-1">
         <div className="flex flex-col">
           <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1">From</label>
-          <select
-              value={sourceCurrency}
-              onChange={handleSourceChange}
-              disabled={isLoading}
-              className="w-full h-14 px-4 rounded-2xl border bg-background font-bold text-lg focus:ring-2 focus:ring-emerald-500 outline-none transition-all appearance-none cursor-pointer"
-          >
-              {availableSources.map(src => (
-                  <option key={src} value={src}>{src}</option>
-              ))}
-          </select>
+          <div className="relative">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-2">
+              <Flag countryCode={CURRENCY_TO_COUNTRY[sourceCurrency]} size={20} />
+            </div>
+            <select
+                value={sourceCurrency}
+                onChange={handleSourceChange}
+                disabled={isLoading}
+                className="w-full h-14 pl-12 pr-4 rounded-2xl border bg-background font-bold text-lg focus:ring-2 focus:ring-emerald-500 outline-none transition-all appearance-none cursor-pointer"
+            >
+                {availableSources.map(src => (
+                    <option key={src} value={src}>{src}</option>
+                ))}
+            </select>
+          </div>
         </div>
         <div className="flex flex-col">
           <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1">To</label>
-          <select
-              {...register('targetCurrency')}
-              disabled={isLoading}
-              className="w-full h-14 px-4 rounded-2xl border bg-background font-bold text-lg focus:ring-2 focus:ring-emerald-500 outline-none transition-all appearance-none cursor-pointer"
-          >
-              {['NGN', 'GHS', 'KES', 'UGX', 'TZS', 'ZAR'].map(tgt => (
-                  <option key={tgt} value={tgt}>{tgt}</option>
-              ))}
-          </select>
+          <div className="relative">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-2">
+              <Flag countryCode={CURRENCY_TO_COUNTRY[targetCurrency]} size={20} />
+            </div>
+            <select
+                {...register('targetCurrency')}
+                disabled={isLoading}
+                className="w-full h-14 pl-12 pr-4 rounded-2xl border bg-background font-bold text-lg focus:ring-2 focus:ring-emerald-500 outline-none transition-all appearance-none cursor-pointer"
+            >
+                {['NGN', 'GHS', 'KES', 'UGX', 'TZS', 'ZAR'].map(tgt => (
+                    <option key={tgt} value={tgt}>{tgt}</option>
+                ))}
+            </select>
+          </div>
         </div>
       </div>
 

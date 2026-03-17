@@ -6,6 +6,8 @@ import { SparklineChart } from "@/components/sparkline-chart"
 import { RateInputForm } from "@/components/rates/rate-input-form"
 import Link from "next/link"
 import { TrendingUp, Award, ArrowRight } from "lucide-react"
+import { Flag } from "@/components/ui/flag"
+import { CURRENCY_TO_COUNTRY } from "@/lib/constants"
 
 interface Props {
   params: {
@@ -72,9 +74,11 @@ export default async function RatesPage({ params }: Props) {
           <h1 className="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight">
             {config.from} to {config.to} Exchange Rate Today — {today}
           </h1>
-          <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-            Get the most accurate, real-time mid-market rates for sending money to {config.toCountry}
-          </p>
+          <div className="text-xl text-slate-400 max-w-2xl mx-auto flex items-center justify-center gap-2">
+            <span>Get the most accurate, real-time mid-market rates for sending money to</span>
+            <Flag countryCode={CURRENCY_TO_COUNTRY[config.to]} size={24} />
+            <span>{config.toCountry}</span>
+          </div>
         </div>
       </section>
 

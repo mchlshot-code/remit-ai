@@ -15,6 +15,8 @@ import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { CORRIDORS } from '@/config/seo-corridors';
 import { TrendingUp, ArrowRight } from 'lucide-react';
+import { Flag } from '@/components/ui/flag';
+import { CURRENCY_TO_COUNTRY } from '@/lib/constants';
 
 export default function Home() {
   const { 
@@ -129,10 +131,10 @@ export default function Home() {
                   className="group bg-card border rounded-2xl p-6 hover:border-emerald-500/50 hover:shadow-lg transition-all"
                 >
                   <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-2xl">{corridor.fromFlag}</span>
-                      <TrendingUp className="w-4 h-4 text-muted-foreground/30" />
-                      <span className="text-2xl">{corridor.toFlag}</span>
+                    <div className="flex items-center gap-2">
+                       <Flag countryCode={CURRENCY_TO_COUNTRY[corridor.from]} size={24} />
+                       <TrendingUp className="w-3 h-3 text-muted-foreground/30" />
+                       <Flag countryCode={CURRENCY_TO_COUNTRY[corridor.to]} size={24} />
                     </div>
                     <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
                   </div>

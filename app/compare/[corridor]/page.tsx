@@ -4,6 +4,8 @@ import { findCorridor } from "@/lib/seo-helpers"
 import { CORRIDORS } from "@/config/seo-corridors"
 import Link from "next/link"
 import { CompareClient } from "./compare-client"
+import { Flag } from "@/components/ui/flag"
+import { CURRENCY_TO_COUNTRY } from "@/lib/constants"
 
 interface Props {
   params: {
@@ -56,7 +58,6 @@ export default async function ComparePage({ params }: Props) {
       <CompareClient 
         from={config.from}
         to={config.to}
-        fromFlag={config.fromFlag}
         toCountry={config.toCountry}
       />
 
@@ -71,8 +72,13 @@ export default async function ComparePage({ params }: Props) {
                 href={`/compare/${c.from.toLowerCase()}-to-${c.to.toLowerCase()}`}
                 className="bg-card border border-border rounded-xl p-4 hover:border-brand/40 transition-colors cursor-pointer group"
               >
+                <div className="flex items-center gap-2 mb-2">
+                  <Flag countryCode={CURRENCY_TO_COUNTRY[c.from]} size={20} />
+                  <span className="text-xs text-muted-foreground mr-1">→</span>
+                  <Flag countryCode={CURRENCY_TO_COUNTRY[c.to]} size={20} />
+                </div>
                 <p className="font-medium text-sm text-foreground">
-                  {c.fromFlag} {c.from} → {c.to} {c.toFlag}
+                  {c.from} → {c.to}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Best rates for {c.toCountry}

@@ -4,6 +4,8 @@ import { PROVIDER_PAIRS } from "@/config/seo-corridors"
 import { getLiveRates, getYear } from "@/lib/seo-helpers"
 import Link from "next/link"
 import { Check, AlertCircle, Zap } from "lucide-react"
+import { Flag } from "@/components/ui/flag"
+import { CURRENCY_TO_COUNTRY } from "@/lib/constants"
 
 interface Props {
   params: {
@@ -64,9 +66,13 @@ export default async function ReviewPage({ params }: Props) {
           <h1 className="text-4xl font-extrabold text-slate-900 mb-4">
             {pair.providers[0]} vs {pair.providers[1]} for {to} Transfers ({currentYear})
           </h1>
-          <p className="text-lg text-slate-600">
-            Comparing live exchange rates and fees for sending {from} to {to}
-          </p>
+          <div className="flex items-center justify-center gap-2 text-lg text-slate-600">
+            <span>Comparing live exchange rates and fees for sending</span>
+            <Flag countryCode={CURRENCY_TO_COUNTRY[from]} size={20} />
+            <span>{from} to</span>
+            <Flag countryCode={CURRENCY_TO_COUNTRY[to]} size={20} />
+            <span>{to}</span>
+          </div>
         </div>
       </header>
 
