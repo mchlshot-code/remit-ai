@@ -6,6 +6,7 @@ import Providers from "../components/providers";
 import { Navigation } from "@/components/navigation";
 import { InstallPrompt } from "@/components/install-prompt";
 import Link from 'next/link';
+import { Analytics } from "@vercel/analytics/react";
 
 const syne = Syne({ 
   subsets: ["latin"],
@@ -66,6 +67,7 @@ export default function RootLayout({
             </footer>
           </div>
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
