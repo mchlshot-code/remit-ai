@@ -18,6 +18,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://remitaiapp.com'),
   title: "RemitAI - Compare Remittance Rates",
   description: "Find the best remittance rates in real-time.",
   manifest: "/manifest.json",

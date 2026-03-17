@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next'
 import { CORRIDORS, PROVIDER_PAIRS } from '@/config/seo-corridors'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://remit-ai-app.vercel.app'
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://remitaiapp.com'
 
   // 1. Homepage
   const homepage = {
