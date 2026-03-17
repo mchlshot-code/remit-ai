@@ -65,9 +65,9 @@ export function Navigation() {
           <Image 
             src="/logo.png" 
             alt="RemitAI Logo" 
-            width={150} 
-            height={40} 
-            className="h-10 w-auto object-contain"
+            width={120} 
+            height={32} 
+            className="h-8 w-auto object-contain"
             priority
           />
         </Link>
@@ -132,9 +132,9 @@ export function Navigation() {
           <Image 
             src="/logo.png" 
             alt="RemitAI Logo" 
-            width={120} 
-            height={32} 
-            className="h-8 w-auto object-contain"
+            width={90} 
+            height={24} 
+            className="h-6 w-auto object-contain"
             priority
           />
         </Link>
