@@ -24,6 +24,12 @@ export interface ParallelRateEstimate {
     source: string;
 }
 
+export interface ProviderPair {
+  slug: string;
+  providers: [string, string];
+  corridor: string;
+}
+
 export interface NormalizedRatesResponse {
     rates: RateResult[];
     savingsMessage: string | null;

@@ -1,3 +1,5 @@
+import { ProviderPair } from '@/modules/rates/types'
+
 export interface Corridor {
   from: string
   to: string
@@ -5,12 +7,6 @@ export interface Corridor {
   toCountry: string
   fromFlag: string
   toFlag: string
-}
-
-export interface ProviderPair {
-  slug: string
-  providers: string[]
-  corridor: string
 }
 
 export const CORRIDORS: Corridor[] = [
@@ -24,14 +20,39 @@ export const CORRIDORS: Corridor[] = [
   { from: "CAD", to: "NGN", fromCountry: "Canada", toCountry: "Nigeria", fromFlag: "🇨🇦", toFlag: "🇳🇬" },
 ]
 
-export const PROVIDER_PAIRS: ProviderPair[] = [
-  { slug: "wise-vs-remitly-nigeria", providers: ["Wise", "Remitly"], corridor: "GBP-NGN" },
-  { slug: "wise-vs-worldremit-nigeria", providers: ["Wise", "WorldRemit"], corridor: "GBP-NGN" },
-  { slug: "remitly-vs-sendwave-nigeria", providers: ["Remitly", "Sendwave"], corridor: "USD-NGN" },
-  { slug: "lemfi-vs-wise-nigeria", providers: ["LemFi", "Wise"], corridor: "GBP-NGN" },
-  { slug: "wise-vs-remitly-kenya", providers: ["Wise", "Remitly"], corridor: "GBP-KES" },
-  { slug: "worldremit-vs-sendwave-ghana", providers: ["WorldRemit", "Sendwave"], corridor: "USD-GHS" },
-  { slug: "taptapsend-vs-remitly-kenya", providers: ["TapTap Send", "Remitly"], corridor: "GBP-KES" },
-  { slug: "taptapsend-vs-worldremit-ghana", providers: ["TapTap Send", "WorldRemit"], corridor: "GBP-GHS" },
-  { slug: "lemfi-vs-taptapsend-nigeria", providers: ["LemFi", "TapTap Send"], corridor: "GBP-NGN" },
+export const ACTIVE_PROVIDERS = [
+  "Wise", 
+  "Remitly", 
+  "WorldRemit", 
+  "LemFi", 
+  "TapTap Send"
 ]
+
+const formatSlugStr = (name: string) => 
+  name.toLowerCase().replace(/\s+/g, '')
+
+export const PROVIDER_PAIRS: ProviderPair[] = CORRIDORS.flatMap((corridor) => {
+  const pairs: ProviderPair[] = []
+  
+  for (let i = 0; i < ACTIVE_PROVIDERS.length; i++) {
+    for (let j = i + 1; j < ACTIVE_PROVIDERS.length; j++) {
+      const p1 = ACTIVE_PROVIDERS[i]
+      const p2 = ACTIVE_PROVIDERS[j]
+
+      // Use full corridor in slug to prevent collisions
+      // e.g. wise-vs-remitly-gbp-ngn NOT wise-vs-remitly-nigeria
+      const corridorSlug = `${corridor.from}-${corridor.to}`
+        .toLowerCase()
+      
+      const slug = `${formatSlugStr(p1)}-vs-${formatSlugStr(p2)}-${corridorSlug}`
+
+      pairs.push({
+        slug,
+        providers: [p1, p2] as [string, string],
+        corridor: `${corridor.from}-${corridor.to}`
+      })
+    }
+  }
+  
+  return pairs
+})
