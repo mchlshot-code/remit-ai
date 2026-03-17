@@ -112,6 +112,70 @@ export async function fetchParallelRate(source: string, target: string, official
     }
 }
 
+async function fetchLemFiRate(req: RateRequest, baseRate: number): Promise<RateResult | null> {
+    // TODO: replace with real endpoint — mocked for now
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        // Simulated delay to mimic network request
+        await new Promise(resolve => setTimeout(resolve, 100));
+        clearTimeout(timeoutId);
+
+        const margin = 0.008; // 0.8% margin
+        const rate = baseRate * (1 - margin);
+        const fee = 0; // LemFi often has zero fees for certain corridors
+        
+        return {
+            provider: 'LemFi',
+            logo: '/lemfi.png',
+            sendAmount: req.amount,
+            receiveAmount: req.amount * rate,
+            exchangeRate: rate,
+            fee: fee,
+            totalCost: req.amount + fee,
+            transferSpeed: 'Within minutes',
+            isBestRate: false,
+            link: 'https://lemfi.com'
+        };
+    } catch (error) {
+        console.error('LemFi fetch error:', error);
+        return null;
+    }
+}
+
+async function fetchTapTapSendRate(req: RateRequest, baseRate: number): Promise<RateResult | null> {
+    // TODO: replace with real endpoint — mocked for now
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        // Simulated delay
+        await new Promise(resolve => setTimeout(resolve, 100));
+        clearTimeout(timeoutId);
+
+        const margin = 0.01; // 1% margin
+        const rate = baseRate * (1 - margin);
+        const fee = 1.99;
+        
+        return {
+            provider: 'TapTap Send',
+            logo: '/taptapsend.png',
+            sendAmount: req.amount,
+            receiveAmount: req.amount * rate,
+            exchangeRate: rate,
+            fee: fee,
+            totalCost: req.amount + fee,
+            transferSpeed: 'Instant',
+            isBestRate: false,
+            link: 'https://taptapsend.com'
+        };
+    } catch (error) {
+        console.error('TapTap Send fetch error:', error);
+        return null;
+    }
+}
+
 export async function fetchAllProviders(req: RateRequest): Promise<RateResult[]> {
     const baseRate = await fetchBaseRate(req.sourceCurrency, req.targetCurrency);
 
@@ -122,6 +186,17 @@ export async function fetchAllProviders(req: RateRequest): Promise<RateResult[]>
     // For the purpose of this engine, we'll simulate the live api calls with realistic calculations
     // based on the real mid-market rate fetched above.
 
-    const results = getMockRates(req, baseRate);
+    const mockResults = getMockRates(req, baseRate);
+    
+    // Fetch new providers in parallel
+    const [lemFiResult, tapTapResult] = await Promise.all([
+        fetchLemFiRate(req, baseRate),
+        fetchTapTapSendRate(req, baseRate)
+    ]);
+
+    const results = [...mockResults];
+    if (lemFiResult) results.push(lemFiResult);
+    if (tapTapResult) results.push(tapTapResult);
+
     return results;
 }

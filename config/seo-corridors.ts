@@ -31,4 +31,7 @@ export const PROVIDER_PAIRS: ProviderPair[] = [
   { slug: "lemfi-vs-wise-nigeria", providers: ["LemFi", "Wise"], corridor: "GBP-NGN" },
   { slug: "wise-vs-remitly-kenya", providers: ["Wise", "Remitly"], corridor: "GBP-KES" },
   { slug: "worldremit-vs-sendwave-ghana", providers: ["WorldRemit", "Sendwave"], corridor: "USD-GHS" },
+  { slug: "taptapsend-vs-remitly-kenya", providers: ["TapTap Send", "Remitly"], corridor: "GBP-KES" },
+  { slug: "taptapsend-vs-worldremit-ghana", providers: ["TapTap Send", "WorldRemit"], corridor: "GBP-GHS" },
+  { slug: "lemfi-vs-taptapsend-nigeria", providers: ["LemFi", "TapTap Send"], corridor: "GBP-NGN" },
 ]
