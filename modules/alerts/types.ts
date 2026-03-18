@@ -8,14 +8,13 @@ export interface RateAlertRequest {
 
 export interface RateAlert {
   id: string;
-  user_id: string | null;
   email: string;
-  currency_pair: string;
+  from_currency: string;
+  to_currency: string;
   target_rate: number;
   current_rate: number | null;
   is_active: boolean;
   is_triggered: boolean;
   triggered_at: string | null;
   created_at: string;
-  updated_at: string;
 }

@@ -5,10 +5,11 @@ export async function createAlert(data: RateAlertRequest): Promise<RateAlert> {
     const currencyPair = `${data.sourceCurrency}_${data.targetCurrency}`;
     
     const { data: alert, error } = await supabaseAdmin
-        .from('user_price_alerts')
+        .from('rate_alerts')
         .insert({
             email: data.email,
-            currency_pair: currencyPair,
+            from_currency: data.sourceCurrency,
+            to_currency: data.targetCurrency,
             target_rate: data.targetRate,
             current_rate: data.currentRate || null,
             is_active: true,
@@ -23,7 +24,7 @@ export async function createAlert(data: RateAlertRequest): Promise<RateAlert> {
 
 export async function getAlertsByEmail(email: string): Promise<RateAlert[]> {
     const { data, error } = await supabaseAdmin
-        .from('user_price_alerts')
+        .from('rate_alerts')
         .select('*')
         .eq('email', email)
         .eq('is_active', true)
@@ -34,14 +35,16 @@ export async function getAlertsByEmail(email: string): Promise<RateAlert[]> {
 }
 
 export async function checkAndTriggerAlerts(
-    currencyPair: string,
+    fromCurrency: string,
+    toCurrency: string,
     currentRate: number
 ): Promise<RateAlert[]> {
     // Find all active, untriggered alerts where current rate meets/exceeds target
     const { data: matchedAlerts, error } = await supabaseAdmin
-        .from('user_price_alerts')
+        .from('rate_alerts')
         .select('*')
-        .eq('currency_pair', currencyPair)
+        .eq('from_currency', fromCurrency)
+        .eq('to_currency', toCurrency)
         .eq('is_active', true)
         .eq('is_triggered', false)
         .lte('target_rate', currentRate);
@@ -52,7 +55,7 @@ export async function checkAndTriggerAlerts(
     // Mark each matched alert as triggered
     const ids = matchedAlerts.map((a: RateAlert) => a.id);
     const { error: updateError } = await supabaseAdmin
-        .from('user_price_alerts')
+        .from('rate_alerts')
         .update({
             is_triggered: true,
             triggered_at: new Date().toISOString(),
@@ -70,7 +73,7 @@ export async function checkAndTriggerAlerts(
 
 export async function deleteAlert(id: string): Promise<void> {
     const { error } = await supabaseAdmin
-        .from('user_price_alerts')
+        .from('rate_alerts')
         .update({ is_active: false })
         .eq('id', id);
 

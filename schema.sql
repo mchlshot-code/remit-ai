@@ -17,8 +17,10 @@ CREATE TABLE public.rate_alerts (
     from_currency TEXT NOT NULL,
     to_currency TEXT NOT NULL,
     target_rate NUMERIC NOT NULL,
-    current_rate NUMERIC NOT NULL,
+    current_rate NUMERIC,
+    is_active BOOLEAN DEFAULT true,
     is_triggered BOOLEAN DEFAULT false,
+    triggered_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
