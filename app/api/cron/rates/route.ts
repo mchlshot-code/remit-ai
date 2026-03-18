@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
                 });
 
                 // 6. Update alert in DB: set is_active=false, is_triggered=true
-                await supabaseAdmin
+                const { error: updateError } = await supabaseAdmin
                     .from('rate_alerts')
                     .update({
                         is_active: false,
@@ -77,7 +77,11 @@ export async function GET(req: NextRequest) {
                     })
                     .eq('id', alert.id);
                 
-                results.push({ id: alert.id, status: 'triggered', rate: currentRate });
+                if (updateError) {
+                    console.error(`Failed to update alert ${alert.id}:`, updateError);
+                } else {
+                    results.push({ id: alert.id, status: 'triggered', rate: currentRate });
+                }
             }
         }
 
