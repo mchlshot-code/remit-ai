@@ -3,13 +3,24 @@ import { notFound } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { CheckCircle, ArrowRight, HelpCircle, Lightbulb } from 'lucide-react';
+import { CheckCircle, ArrowRight, HelpCircle, Lightbulb, TrendingUp } from 'lucide-react';
+import { fetchAllProviders } from '@/modules/rates/fetchers';
+import { ComparisonTable } from '@/components/comparison-table';
+
+export const revalidate = 3600; // Refresh rates every hour
 
 interface Props {
   params: {
     slug: string[];
   };
 }
+
+const currencyMap: Record<string, string> = {
+  'USA': 'USD',
+  'UK': 'GBP',
+  'Canada': 'CAD',
+  'Europe': 'EUR',
+};
 
 async function getGuide(slug: string) {
   const { data, error } = await supabase
@@ -48,6 +59,18 @@ export default async function SEOGuidePage({ params }: Props) {
     notFound();
   }
 
+  // Fetch live market data for the corridor
+  const sourceCurrency = currencyMap[guide.origin_country] || 'USD';
+  const liveRates = await fetchAllProviders({
+    sourceCurrency,
+    targetCurrency: 'NGN',
+    amount: 1000,
+  });
+
+  // Sort rates to find the market leader
+  const sortedRates = [...liveRates].sort((a, b) => b.exchangeRate - a.exchangeRate);
+  const winner = sortedRates[0];
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100">
       {/* Hero Section */}
@@ -65,28 +88,47 @@ export default async function SEOGuidePage({ params }: Props) {
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-8">
         <div className="mx-auto max-w-4xl space-y-16">
           
-          {/* The "Winner" Callout */}
+          {/* Live Comparison Table Injection */}
+          <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="mb-8 flex items-center justify-between border-b border-slate-200 pb-4 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <TrendingUp className="h-6 w-6 text-blue-500" />
+                <h2 className="text-2xl font-bold">Live Market Rates</h2>
+              </div>
+              <div className="text-sm text-slate-500">
+                Sorted by highest payout
+              </div>
+            </div>
+            <ComparisonTable 
+              initialRates={liveRates} 
+              sourceCurrency={sourceCurrency} 
+              targetCurrency="NGN" 
+              amount={1000} 
+            />
+          </section>
+
+          {/* The Smart "Top Pick" Callout */}
           <section className="relative overflow-hidden rounded-3xl p-1 bg-gradient-to-r from-blue-600 to-emerald-600 shadow-2xl">
             <div className="flex flex-col items-center justify-between gap-8 rounded-[calc(1.5rem-1px)] bg-white p-8 dark:bg-slate-900 md:flex-row md:p-12">
               <div className="flex-1 text-center md:text-left">
                 <span className="mb-2 inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
                   🏆 Editors&apos; Choice
                 </span>
-                <h2 className="text-3xl font-bold md:text-4xl">
-                  Top Pick: Check live rates on LemFi
+                <h2 className="text-3xl font-bold md:text-4xl text-slate-900 dark:text-white">
+                  Top Pick: {winner.provider} is currently offering the best rate at {winner.exchangeRate.toFixed(2)} NGN.
                 </h2>
                 <p className="mt-4 text-slate-600 dark:text-slate-400">
                   Join 1M+ users getting the best {guide.origin_country} to Nigeria rates. 
-                  Zero fees, instant delivery.
+                  Zero fees, instant delivery via {winner.provider}.
                 </p>
               </div>
               <div className="flex-shrink-0">
-                <Link href="/go/lemfi">
+                <Link href={`/go/${winner.provider.toLowerCase().replace(/\s+/g, '-')}?corridor=${sourceCurrency}-to-NGN`}>
                   <Button size="lg" className="h-16 rounded-2xl px-10 text-lg font-bold shadow-lg transition-all hover:scale-105 bg-blue-600 hover:bg-blue-700 text-white border-0">
-                    Send via LemFi <ArrowRight className="ml-2 h-5 w-5" />
+                    Send via {winner.provider} <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
               </div>
@@ -164,9 +206,9 @@ export default async function SEOGuidePage({ params }: Props) {
       <footer className="border-t border-slate-200 bg-white py-20 dark:border-slate-800 dark:bg-slate-950">
         <div className="container mx-auto px-4 text-center">
           <h2 className="mb-8 text-3xl font-bold">Ready to send money home?</h2>
-          <Link href="/go/lemfi">
+          <Link href={`/go/${winner.provider.toLowerCase().replace(/\s+/g, '-')}?corridor=${sourceCurrency}-to-NGN`}>
             <Button size="lg" className="rounded-2xl px-12 text-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
-              Transfer with LemFi Now
+              Transfer with {winner.provider} Now
             </Button>
           </Link>
           <p className="mt-6 text-sm text-slate-500">

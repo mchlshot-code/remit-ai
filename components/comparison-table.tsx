@@ -1,11 +1,27 @@
 'use client';
 import { useQuery } from '@tanstack/react-query';
 import { useRatesStore } from '../modules/rates/store';
-import { NormalizedRatesResponse } from '../modules/rates/types';
+import { NormalizedRatesResponse, RateResult } from '../modules/rates/types';
 import { BestPickBadge } from './best-pick-badge';
 
-export function ComparisonTable() {
-    const { sourceCurrency, targetCurrency, amount, hasSearched } = useRatesStore();
+export function ComparisonTable({ 
+    initialRates, 
+    sourceCurrency: propSource, 
+    targetCurrency: propTarget, 
+    amount: propAmount 
+}: { 
+    initialRates?: RateResult[]; 
+    sourceCurrency?: string; 
+    targetCurrency?: string; 
+    amount?: number; 
+} = {}) {
+    const store = useRatesStore();
+    
+    // Use props if provided, otherwise fallback to store
+    const sourceCurrency = propSource || store.sourceCurrency;
+    const targetCurrency = propTarget || store.targetCurrency;
+    const amount = propAmount || store.amount;
+    const hasSearched = initialRates ? true : store.hasSearched;
 
     const { data, isLoading, error } = useQuery<NormalizedRatesResponse>({
         queryKey: ['rates', sourceCurrency, targetCurrency, amount],
@@ -14,8 +30,13 @@ export function ComparisonTable() {
             if (!res.ok) throw new Error('Failed to fetch rates');
             return res.json();
         },
-        enabled: hasSearched
+        enabled: !initialRates && hasSearched
     });
+
+    // If we have initial rates, wrap them in the expected response structure
+    const displayData = initialRates 
+        ? { rates: initialRates, savingsMessage: null } as NormalizedRatesResponse
+        : data;
 
     if (!hasSearched) {
         return null;
@@ -29,20 +50,20 @@ export function ComparisonTable() {
         );
     }
 
-    if (error || !data || !data.rates) {
+    if (error || !displayData || !displayData.rates) {
         return <div className="text-center py-12 text-red-500 bg-red-50 rounded-lg mt-8 border border-red-100">Failed to load comparison data. Please try again.</div>;
     }
 
     return (
         <div className="w-full flex flex-col gap-6 mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {data.savingsMessage && (
+            {displayData.savingsMessage && (
                 <div className="bg-green-50 text-green-800 p-4 rounded-lg text-center font-medium border border-green-200 shadow-sm transition-all hover:shadow-md">
-                    🎉 {data.savingsMessage}
+                    🎉 {displayData.savingsMessage}
                 </div>
             )}
 
             <div className="grid gap-4">
-                {data.rates.map((rate) => (
+                {displayData.rates.map((rate) => (
                     <div
                         key={rate.provider}
                         className={`flex flex-col md:flex-row items-center justify-between p-5 bg-white border-2 rounded-xl shadow-sm hover:shadow-md transition-all relative ${rate.isBestRate ? 'border-green-500 bg-green-50/10' : 'border-transparent border-gray-100 hover:border-blue-100'}`}
