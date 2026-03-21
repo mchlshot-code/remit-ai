@@ -26,23 +26,50 @@ function getMockRates(req: RateRequest, baseRate: number): RateResult[] {
     });
 }
 
-export async function fetchBaseRate(source: string, target: string): Promise<number> {
-    const defaultRate = source === 'GBP' && target === 'NGN' ? 2050 : 1950;
-    
+/**
+ * Fetch the live mid-market rate for ANY currency pair via fawazahmed0 API.
+ * Returns null if the pair is not found or the request fails.
+ */
+export async function fetchBaseRate(source: string, target: string): Promise<number | null> {
+    const fromCode = source.toLowerCase();
+    const toCode = target.toLowerCase();
+
     try {
-        const res = await fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${source.toLowerCase()}.json`, { next: { revalidate: 3600 } });
-        if (!res.ok) throw new Error('Failed to fetch base rate');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        const res = await fetch(
+            `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${fromCode}.json`,
+            { signal: controller.signal, next: { revalidate: 3600 } }
+        );
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+            console.error(`Base rate fetch failed: HTTP ${res.status} for ${fromCode} -> ${toCode}`);
+            return null;
+        }
+
         const data = await res.json();
-        
-        const rate = data[source.toLowerCase()][target.toLowerCase()];
-        return rate || defaultRate;
+        const rate = data[fromCode]?.[toCode];
+
+        if (rate === undefined || rate === null) {
+            console.warn(`Rate pair not found: ${fromCode} -> ${toCode}`);
+            return null;
+        }
+
+        return rate;
     } catch (error) {
         console.error('Base rate fetch error:', error);
-        return defaultRate; // fallback
+        return null;
     }
 }
 
 export async function fetchParallelRate(source: string, target: string, officialRate: number): Promise<ParallelRateEstimate | undefined> {
+    // Parallel market data only applies when NGN is on either side
+    if (source !== 'NGN' && target !== 'NGN') {
+        return undefined;
+    }
+
     try {
         const API_URL = process.env.PARALLEL_MARKET_API_URL || 'https://api.korapay.com/merchant/api/v1/conversions/rates';
         const API_KEY = process.env.PARALLEL_MARKET_API_KEY;
@@ -50,6 +77,9 @@ export async function fetchParallelRate(source: string, target: string, official
         let liveRate: number | undefined;
 
         if (API_KEY) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
             const res = await fetch(API_URL, {
                 method: 'POST',
                 headers: {
@@ -61,8 +91,10 @@ export async function fetchParallelRate(source: string, target: string, official
                     to_currency: target,
                     amount: 1
                 }),
+                signal: controller.signal,
                 next: { revalidate: 300 } // Short cache (5 mins) for volatile parallel market
             });
+            clearTimeout(timeoutId);
 
             if (res.ok) {
                 const data = await res.json();
@@ -71,7 +103,6 @@ export async function fetchParallelRate(source: string, target: string, official
         }
         
         // Free fallback proxy simulation if no API key is provided
-        // Represents a live fetch against an open wrapper.
         if (!liveRate) {
             if (target === 'NGN') {
                 const simulatedLiveResponse = await fetch('https://api.mocki.io/v2/01234567/ngn-parallel', { method: 'GET' }).catch(() => null);
@@ -87,18 +118,42 @@ export async function fetchParallelRate(source: string, target: string, official
                 } else {
                     // Convert to GBP equivalent logically via official rates to estimate parallel proxy.
                     const officialGbpNgn = await fetchBaseRate('GBP', 'NGN');
-                    const premiumMultiplier = gbpNgnSimulatedRate / officialGbpNgn;
-                    liveRate = officialRate * premiumMultiplier;
+                    if (officialGbpNgn) {
+                        const premiumMultiplier = gbpNgnSimulatedRate / officialGbpNgn;
+                        liveRate = officialRate * premiumMultiplier;
+                    }
+                }
+            } else if (source === 'NGN') {
+                // NGN → X: derive parallel rate from the inverse
+                // e.g. NGN → GBP: official gives NGN per GBP, parallel is the inverse view
+                const inverseOfficial = await fetchBaseRate(target, 'NGN');
+                if (inverseOfficial) {
+                    const simulatedLiveResponse = await fetch('https://api.mocki.io/v2/01234567/ngn-parallel', { method: 'GET' }).catch(() => null);
+                    let gbpNgnSimulatedRate = 2250;
+                    if (simulatedLiveResponse?.ok) {
+                        const data = await simulatedLiveResponse.json();
+                        gbpNgnSimulatedRate = data?.rate || 2250;
+                    }
+                    const officialGbpNgn = await fetchBaseRate('GBP', 'NGN');
+                    if (officialGbpNgn) {
+                        const premiumMultiplier = gbpNgnSimulatedRate / officialGbpNgn;
+                        // For NGN→X, the parallel rate is the inverse with premium applied
+                        liveRate = officialRate / premiumMultiplier;
+                    }
                 }
             } else {
-                 return undefined; // If no parallel rate available for a corridor, return undefined gracefully
+                return undefined;
             }
         }
 
         if (liveRate) {
+            const premiumPercent = target === 'NGN'
+                ? Math.round(((liveRate - officialRate) / officialRate) * 100)
+                : Math.round(((officialRate - liveRate) / officialRate) * 100);
+
             return {
-                estimatedParallelRate: Math.round(liveRate),
-                premiumPercent: Math.round(((liveRate - officialRate) / officialRate) * 100),
+                estimatedParallelRate: target === 'NGN' ? Math.round(liveRate) : parseFloat(liveRate.toFixed(6)),
+                premiumPercent: Math.abs(premiumPercent),
                 disclaimer: "Live parallel market estimate. Actual street rates may vary.",
                 source: API_KEY ? "Live Korapay / FX Wrapper" : "Simulated FX Wrapper via GBP proxy"
             };
@@ -179,12 +234,11 @@ async function fetchTapTapSendRate(req: RateRequest, baseRate: number): Promise<
 export async function fetchAllProviders(req: RateRequest): Promise<RateResult[]> {
     const baseRate = await fetchBaseRate(req.sourceCurrency, req.targetCurrency);
 
-    // In a real production app, we would make concurrent requests to:
-    // - Wise public API generic quotes
-    // - Remitly pricing API
-    // - WorldRemit API
-    // For the purpose of this engine, we'll simulate the live api calls with realistic calculations
-    // based on the real mid-market rate fetched above.
+    // If no base rate, return empty — graceful degradation
+    if (baseRate === null) {
+        console.warn(`No base rate for ${req.sourceCurrency} → ${req.targetCurrency}, returning empty`);
+        return [];
+    }
 
     const mockResults = getMockRates(req, baseRate);
     

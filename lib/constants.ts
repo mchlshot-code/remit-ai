@@ -1,13 +1,2 @@
-export const CURRENCY_TO_COUNTRY: Record<string, string> = {
-  GBP: "gb",
-  USD: "us",
-  EUR: "eu",
-  NGN: "ng",
-  GHS: "gh",
-  KES: "ke",
-  UGX: "ug",
-  TZS: "tz",
-  ZAR: "za",
-  CAD: "ca",
-  AUD: "au",
-}
+// Re-export from single source of truth — backwards compatible alias
+export { CURRENCY_TO_COUNTRY_CODE as CURRENCY_TO_COUNTRY } from '@/config/currencies'

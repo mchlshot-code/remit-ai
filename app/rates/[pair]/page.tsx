@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 import { Metadata } from "next"
 import { findCorridor, getLiveRates } from "@/lib/seo-helpers"
-import { CORRIDORS } from "@/config/seo-corridors"
+import { CORRIDORS } from "@/config/corridors"
 import { SparklineChart } from "@/components/sparkline-chart"
 import { RateInputForm } from "@/components/rates/rate-input-form"
 import Link from "next/link"
@@ -33,9 +33,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const bestProvider = ratesData.rates[0]?.provider
   const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 
+  const rateDesc = bestRate && bestProvider 
+    ? `Live ${config.from} to ${config.to} exchange rate updated every 30 minutes. Best rate right now: ${bestRate} via ${bestProvider}.`
+    : `Live ${config.from} to ${config.to} exchange rate updated every 30 minutes. Check the latest mid-market trends.`;
+
   return {
     title: `${config.from} to ${config.to} Rate Today — ${today} | RemitAI`,
-    description: `Live ${config.from} to ${config.to} exchange rate updated every 30 minutes. Best rate right now: ${bestRate} via ${bestProvider}.`,
+    description: rateDesc,
   }
 }
 
@@ -51,16 +55,18 @@ export default async function RatesPage({ params }: Props) {
   const bestOption = ratesData.rates[0]
   const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
   
+  const baseRate = ratesData.baseRate ?? 0
+
   // Mock historical data for sparkline (as per requirements: show single point if table empty)
   // In a real app we'd fetch this from exchange_rate_cache
   const chartData = [
-    { date: '7d ago', rate: ratesData.baseRate * 0.98 },
-    { date: '6d ago', rate: ratesData.baseRate * 0.99 },
-    { date: '5d ago', rate: ratesData.baseRate * 0.975 },
-    { date: '4d ago', rate: ratesData.baseRate * 1.01 },
-    { date: '3d ago', rate: ratesData.baseRate * 1.02 },
-    { date: '2d ago', rate: ratesData.baseRate * 0.995 },
-    { date: 'Today', rate: ratesData.baseRate },
+    { date: '7d ago', rate: baseRate * 0.98 },
+    { date: '6d ago', rate: baseRate * 0.99 },
+    { date: '5d ago', rate: baseRate * 0.975 },
+    { date: '4d ago', rate: baseRate * 1.01 },
+    { date: '3d ago', rate: baseRate * 1.02 },
+    { date: '2d ago', rate: baseRate * 0.995 },
+    { date: 'Today', rate: baseRate },
   ]
 
   return (
@@ -92,7 +98,7 @@ export default async function RatesPage({ params }: Props) {
                 <span className="text-6xl font-black text-slate-900">1.00</span>
                 <span className="text-2xl font-bold text-slate-400">{config.from} =</span>
                 <span className="text-6xl font-black text-emerald-600">
-                  {ratesData.baseRate.toFixed(2)}
+                  {baseRate.toFixed(2)}
                 </span>
                 <span className="text-2xl font-bold text-slate-400">{config.to}</span>
               </div>
@@ -114,6 +120,7 @@ export default async function RatesPage({ params }: Props) {
         </div>
 
         {/* Best Provider Highlight */}
+        {bestOption && (
         <div className="bg-emerald-600 rounded-3xl p-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-8 group">
           <div className="flex items-start gap-5">
             <div className="bg-white/20 p-4 rounded-2xl backdrop-blur-sm">
@@ -144,6 +151,7 @@ export default async function RatesPage({ params }: Props) {
             Send Now
           </Link>
         </div>
+        )}
 
         {/* Converter / Input Form */}
         <div className="flex flex-col items-center">

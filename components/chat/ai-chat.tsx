@@ -119,28 +119,35 @@ export function AiChat() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4">
-        {messages.map((msg, i) => (
-          <motion.div 
-            key={i}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div className={`max-w-[85%] rounded-2xl px-5 py-3 ${
-              msg.role === 'user' 
-                ? 'bg-emerald-500 text-white rounded-br-sm' 
-                : 'bg-muted rounded-bl-sm'
-            }`}>
-              <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-            </div>
-          </motion.div>
-        ))}
-        {isStreaming && (
+        {messages.map((msg, i) => {
+          if (isStreaming && i === messages.length - 1 && msg.content === '') {
+            return null; // hide empty message while waiting for first chunk
+          }
+          return (
+            <motion.div 
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div className={`max-w-[85%] rounded-2xl px-5 py-3 ${
+                msg.role === 'user' 
+                  ? 'bg-emerald-500 text-white rounded-br-sm' 
+                  : 'bg-muted rounded-bl-sm'
+              }`}>
+                <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+              </div>
+            </motion.div>
+          );
+        })}
+        {isStreaming && messages[messages.length - 1]?.content === '' && (
           <div className="flex justify-start">
-             <div className="max-w-[85%] rounded-2xl rounded-bl-sm bg-muted px-5 py-3 text-sm flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                <span className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                <span className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce"></span>
+             <div className="max-w-[85%] rounded-2xl rounded-bl-sm bg-muted px-5 py-3 text-sm flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="text-muted-foreground font-medium">Checking live rates…</span>
              </div>
           </div>
         )}

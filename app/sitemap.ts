@@ -1,6 +1,11 @@
 import { MetadataRoute } from 'next'
 import { CORRIDORS, PROVIDER_PAIRS } from '@/config/seo-corridors'
+import { POPULAR_CORRIDORS } from '@/config/corridors'
 import { supabase } from '@/lib/supabase'
+
+export { POPULAR_CORRIDORS }
+
+export const revalidate = 0;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://remitaiapp.com'
@@ -13,11 +18,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 1.0,
   }
 
+  // Comparison routes from full CORRIDORS (which includes reverse pairs)
   const comparisonRoutes = CORRIDORS.map((c) => ({
     url: `${baseUrl}/compare/${c.from.toLowerCase()}-to-${c.to.toLowerCase()}`,
     lastModified: new Date(),
     changeFrequency: 'hourly' as const,
     priority: 0.8,
+  }))
+
+  // Corridor SEO pages from POPULAR_CORRIDORS
+  const corridorRoutes = POPULAR_CORRIDORS.map((c) => ({
+    url: `${baseUrl}/corridors/${c.from.toLowerCase()}-to-${c.to.toLowerCase()}`,
+    lastModified: new Date(),
+    changeFrequency: 'hourly' as const,
+    priority: 0.7,
   }))
 
   const reviewRoutes = PROVIDER_PAIRS.map((p) => ({
@@ -55,5 +69,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Continue without dynamic routes if fetch fails
   }
 
-  return [homepage, ...comparisonRoutes, ...reviewRoutes, ...ratesRoutes, ...seoGuideRoutes]
+  return [homepage, ...comparisonRoutes, ...corridorRoutes, ...reviewRoutes, ...ratesRoutes, ...seoGuideRoutes]
 }

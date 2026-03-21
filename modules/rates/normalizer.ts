@@ -1,4 +1,5 @@
 import { RateResult, NormalizedRatesResponse } from './types';
+import { CURRENCY_SYMBOLS } from '@/config/currencies';
 
 export function normalizeAndCompare(results: RateResult[], sourceCurrency: string): NormalizedRatesResponse {
     if (!results.length) return { rates: [], savingsMessage: null };
@@ -20,7 +21,7 @@ export function normalizeAndCompare(results: RateResult[], sourceCurrency: strin
     if (sorted.length > 1 && bestRate.receiveAmount > worstRate.receiveAmount) {
         const differenceInReceive = bestRate.receiveAmount - worstRate.receiveAmount;
         const savingsInSource = differenceInReceive / bestRate.exchangeRate;
-        const currencySymbol = sourceCurrency === 'GBP' ? '£' : sourceCurrency === 'USD' ? '$' : sourceCurrency;
+        const currencySymbol = CURRENCY_SYMBOLS[sourceCurrency] || sourceCurrency;
         savingsMessage = `You save ${currencySymbol}${savingsInSource.toFixed(2)} vs worst rate`;
     }
 
@@ -29,3 +30,4 @@ export function normalizeAndCompare(results: RateResult[], sourceCurrency: strin
         savingsMessage
     };
 }
+

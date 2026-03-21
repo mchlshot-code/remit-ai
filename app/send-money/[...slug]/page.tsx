@@ -68,8 +68,8 @@ export default async function SEOGuidePage({ params }: Props) {
   });
 
   // Sort rates to find the market leader
-  const sortedRates = [...liveRates].sort((a, b) => b.exchangeRate - a.exchangeRate);
-  const winner = sortedRates[0];
+  const sortedRates = liveRates?.length ? [...liveRates].sort((a, b) => b.exchangeRate - a.exchangeRate) : [];
+  const winner = sortedRates[0] || null;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100">
@@ -92,6 +92,7 @@ export default async function SEOGuidePage({ params }: Props) {
         <div className="mx-auto max-w-4xl space-y-16">
           
           {/* Live Comparison Table Injection */}
+          {liveRates?.length > 0 && (
           <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="mb-8 flex items-center justify-between border-b border-slate-200 pb-4 dark:border-slate-800">
               <div className="flex items-center gap-3">
@@ -109,8 +110,10 @@ export default async function SEOGuidePage({ params }: Props) {
               amount={1000} 
             />
           </section>
+          )}
 
           {/* The Smart "Top Pick" Callout */}
+          {winner && (
           <section className="relative overflow-hidden rounded-3xl p-1 bg-gradient-to-r from-blue-600 to-emerald-600 shadow-2xl">
             <div className="flex flex-col items-center justify-between gap-8 rounded-[calc(1.5rem-1px)] bg-white p-8 dark:bg-slate-900 md:flex-row md:p-12">
               <div className="flex-1 text-center md:text-left">
@@ -134,6 +137,7 @@ export default async function SEOGuidePage({ params }: Props) {
               </div>
             </div>
           </section>
+          )}
 
           {/* Step-by-Step */}
           <section>
@@ -203,6 +207,7 @@ export default async function SEOGuidePage({ params }: Props) {
       </div>
       
       {/* Footer CTA */}
+      {winner && (
       <footer className="border-t border-slate-200 bg-white py-20 dark:border-slate-800 dark:bg-slate-950">
         <div className="container mx-auto px-4 text-center">
           <h2 className="mb-8 text-3xl font-bold">Ready to send money home?</h2>
@@ -216,6 +221,7 @@ export default async function SEOGuidePage({ params }: Props) {
           </p>
         </div>
       </footer>
+      )}
     </div>
   );
 }

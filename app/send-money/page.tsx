@@ -8,6 +8,8 @@ export const metadata: Metadata = {
   description: 'Explore our comprehensive guides on how to send money to Nigeria from USA, UK, Canada, and Europe at the best exchange rates.',
 };
 
+export const revalidate = 0;
+
 async function getGuides() {
   const { data, error } = await supabase
     .from('seo_guides')

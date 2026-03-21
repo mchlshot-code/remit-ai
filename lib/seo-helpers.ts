@@ -1,7 +1,8 @@
-import { CORRIDORS, type Corridor } from "@/config/seo-corridors"
+import { type Corridor, buildCorridor } from "@/config/corridors"
 import { cache } from "react"
 import { fetchAllProviders, fetchBaseRate, fetchParallelRate } from "@/modules/rates/fetchers"
 import { normalizeAndCompare } from "@/modules/rates/normalizer"
+import { CURRENCY_SYMBOLS } from "@/config/currencies"
 
 /**
  * Optimized server-side rate fetching. 
@@ -9,6 +10,16 @@ import { normalizeAndCompare } from "@/modules/rates/normalizer"
  */
 export const getLiveRates = cache(async (from: string, to: string, amount: number = 500) => {
   const baseRate = await fetchBaseRate(from, to)
+  if (baseRate === null) {
+    return {
+      rates: [],
+      savingsMessage: null,
+      baseRate: null,
+      parallelRateEstimate: undefined,
+      updatedAt: new Date().toISOString()
+    }
+  }
+
   const rawRates = await fetchAllProviders({ sourceCurrency: from, targetCurrency: to, amount })
   const result = normalizeAndCompare(rawRates, from)
   const parallelRateEstimate = await fetchParallelRate(from, to, baseRate)
@@ -42,11 +53,18 @@ export function parseCorridorSlug(slug: string): { from: string; to: string } | 
 }
 
 /**
- * Finds a matching corridor configuration based on a slug.
- * Returns null if no match is found.
+ * Builds a Corridor from a slug. Works for ANY valid currency pair,
+ * not just predefined corridors — enabling fully flexible comparison.
  */
 export function findCorridor(slug: string): Corridor | null {
   const parsed = parseCorridorSlug(slug)
   if (!parsed) return null
-  return CORRIDORS.find(c => c.from === parsed.from && c.to === parsed.to) ?? null
+  return buildCorridor(parsed.from, parsed.to)
+}
+
+/**
+ * Gets the currency symbol for a given currency code.
+ */
+export function getCurrencySymbol(code: string): string {
+  return CURRENCY_SYMBOLS[code] || code
 }

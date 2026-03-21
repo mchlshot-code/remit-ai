@@ -9,7 +9,8 @@ import { useQuery } from '@tanstack/react-query';
 import { NormalizedRatesResponse } from '@/modules/rates/types';
 import { Bell, ShieldCheck } from 'lucide-react';
 import { useRatesStore } from '@/modules/rates/store';
-import { CURRENCY_SYMBOLS, SUPPORTED_CORRIDORS } from '@/config/providers';
+import { CURRENCY_SYMBOLS } from '@/config/currencies';
+import { POPULAR_CORRIDORS } from '@/config/corridors';
 
 const AlertSchema = z.object({
   targetRate: z.number().min(0.01, 'Target rate must be positive'),
@@ -26,10 +27,10 @@ export function RateAlertForm({ userEmail }: RateAlertFormProps) {
   
   // Local state for corridor selection (defaults to store values if supported, else first supported)
   const defaultSecondary = `${storeSource}-${storeTarget}`;
-  const isStoreSupported = SUPPORTED_CORRIDORS.some(c => `${c.from}-${c.to}` === defaultSecondary);
+  const isStoreSupported = POPULAR_CORRIDORS.some(c => `${c.from}-${c.to}` === defaultSecondary);
   
   const [selectedCorridor, setSelectedCorridor] = useState(
-    isStoreSupported ? defaultSecondary : `${SUPPORTED_CORRIDORS[0].from}-${SUPPORTED_CORRIDORS[0].to}`
+    isStoreSupported ? defaultSecondary : `${POPULAR_CORRIDORS[0].from}-${POPULAR_CORRIDORS[0].to}`
   );
 
   const [fromCurr, toCurr] = selectedCorridor.split('-');
@@ -131,7 +132,7 @@ export function RateAlertForm({ userEmail }: RateAlertFormProps) {
                   onChange={(e) => setSelectedCorridor(e.target.value)}
                   className="w-full h-14 px-5 bg-muted/30 border-2 rounded-2xl font-bold text-lg outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer"
                 >
-                  {SUPPORTED_CORRIDORS.map((c) => (
+                  {POPULAR_CORRIDORS.map((c) => (
                     <option key={`${c.from}-${c.to}`} value={`${c.from}-${c.to}`}>
                       {c.from} → {c.to}
                     </option>

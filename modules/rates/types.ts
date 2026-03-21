@@ -33,6 +33,6 @@ export interface ProviderPair {
 export interface NormalizedRatesResponse {
     rates: RateResult[];
     savingsMessage: string | null;
-    baseRate?: number;
+    baseRate?: number | null;
     parallelRateEstimate?: ParallelRateEstimate;
 }

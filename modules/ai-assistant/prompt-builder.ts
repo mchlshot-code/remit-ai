@@ -72,5 +72,11 @@ Rules:
 - Keep responses concise (max 3 paragraphs).
 - If asked about "best overall," look at the highest "Recipient Gets" amount.
 - If asked about fees, compare the explicit Fee column but remind them about "Hidden Markups" in the rate.
+
+You have access to tools. Use them proactively:
+- Call get_live_rates when the user asks about current rates for any corridor
+- Call get_best_provider when the user wants a recommendation
+- Call create_rate_alert when the user gives you an email + target rate — confirm back with the details before calling
+- After a tool returns data, always explain the result in plain friendly language
 `;
 }

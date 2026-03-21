@@ -4,9 +4,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { motion } from 'framer-motion';
-import { SUPPORTED_CORRIDORS, CURRENCY_SYMBOLS } from '@/config/providers';
-import { Flag } from '@/components/ui/flag';
-import { CURRENCY_TO_COUNTRY } from '@/lib/constants';
+import { CURRENCY_SYMBOLS } from '@/config/currencies';
+import { CurrencyCombobox } from '@/components/rates/currency-combobox';
+import { ArrowLeftRight } from 'lucide-react';
 
 const FormSchema = z.object({
   sourceCurrency: z.string().min(3).max(3),
@@ -37,15 +37,11 @@ export function RateInputForm({ onSubmit, isLoading = false, defaultSource = 'GB
   const targetCurrency = watch('targetCurrency');
   const currencySymbol = CURRENCY_SYMBOLS[sourceCurrency] || sourceCurrency;
 
-  const availableSources = Array.from(new Set(SUPPORTED_CORRIDORS.map(c => c.from)));
-
-  const handleSourceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const newSource = e.target.value;
-      setValue('sourceCurrency', newSource);
-      const newTargets = SUPPORTED_CORRIDORS.filter(c => c.from === newSource).map(c => c.to);
-      if (!newTargets.includes(targetCurrency)) {
-          setValue('targetCurrency', newTargets[0]);
-      }
+  const handleSwap = (): void => {
+    const currentSource = sourceCurrency;
+    const currentTarget = targetCurrency;
+    setValue('sourceCurrency', currentTarget);
+    setValue('targetCurrency', currentSource);
   };
 
   return (
@@ -63,42 +59,35 @@ export function RateInputForm({ onSubmit, isLoading = false, defaultSource = 'GB
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.2 }}
     >
-      {/* Row 1: From | To */}
-      <div className="grid grid-cols-2 gap-3 mb-1">
-        <div className="flex flex-col">
-          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1">From</label>
-          <div className="relative">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-2">
-              <Flag countryCode={CURRENCY_TO_COUNTRY[sourceCurrency]} size={20} />
-            </div>
-            <select
-                value={sourceCurrency}
-                onChange={handleSourceChange}
-                disabled={isLoading}
-                className="w-full h-14 pl-12 pr-4 rounded-2xl border bg-background font-bold text-lg focus:ring-2 focus:ring-emerald-500 outline-none transition-all appearance-none cursor-pointer"
-            >
-                {availableSources.map(src => (
-                    <option key={src} value={src}>{src}</option>
-                ))}
-            </select>
-          </div>
+      {/* Row 1: From | Swap | To */}
+      <div className="flex items-end gap-2 mb-1">
+        <div className="flex-1 min-w-0">
+          <CurrencyCombobox
+            value={sourceCurrency}
+            onChange={(code) => setValue('sourceCurrency', code)}
+            label="From"
+            disabled={isLoading}
+          />
         </div>
-        <div className="flex flex-col">
-          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1">To</label>
-          <div className="relative">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-2">
-              <Flag countryCode={CURRENCY_TO_COUNTRY[targetCurrency]} size={20} />
-            </div>
-            <select
-                {...register('targetCurrency')}
-                disabled={isLoading}
-                className="w-full h-14 pl-12 pr-4 rounded-2xl border bg-background font-bold text-lg focus:ring-2 focus:ring-emerald-500 outline-none transition-all appearance-none cursor-pointer"
-            >
-                {['NGN', 'GHS', 'KES', 'UGX', 'TZS', 'ZAR'].map(tgt => (
-                    <option key={tgt} value={tgt}>{tgt}</option>
-                ))}
-            </select>
-          </div>
+        
+        {/* Swap Button */}
+        <button
+          type="button"
+          onClick={handleSwap}
+          disabled={isLoading}
+          className="flex-shrink-0 w-10 h-10 mb-0.5 rounded-full border-2 border-border bg-background hover:bg-muted hover:border-emerald-500/40 active:scale-90 flex items-center justify-center transition-all disabled:opacity-50"
+          aria-label="Swap currencies"
+        >
+          <ArrowLeftRight className="w-4 h-4 text-muted-foreground" />
+        </button>
+        
+        <div className="flex-1 min-w-0">
+          <CurrencyCombobox
+            value={targetCurrency}
+            onChange={(code) => setValue('targetCurrency', code)}
+            label="To"
+            disabled={isLoading}
+          />
         </div>
       </div>
 

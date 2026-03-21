@@ -1,3 +1,6 @@
+// Re-export currency symbols from single source of truth
+export { CURRENCY_SYMBOLS } from '@/config/currencies'
+
 export const PROVIDERS = [
     { id: 'wise', name: 'Wise' },
     { id: 'remitly', name: 'Remitly' },
@@ -5,18 +8,5 @@ export const PROVIDERS = [
     { id: 'xhofm', name: 'Xoom by PayPal' }
 ];
 
-export const CURRENCY_SYMBOLS: Record<string, string> = {
-    GBP: '£', USD: '$', EUR: '€', CAD: 'CA$', AUD: 'A$', NGN: '₦', KES: 'KSh', GHS: '₵'
-};
-
-export const SUPPORTED_CORRIDORS = [
-    { from: 'GBP', to: 'NGN' },
-    { from: 'USD', to: 'NGN' },
-    { from: 'EUR', to: 'NGN' },
-    { from: 'CAD', to: 'NGN' },
-    { from: 'GBP', to: 'KES' },
-    { from: 'GBP', to: 'GHS' },
-    { from: 'USD', to: 'KES' },
-    { from: 'USD', to: 'GHS' },
-];
-
+// SUPPORTED_CORRIDORS removed — replaced by POPULAR_CORRIDORS in config/corridors.ts
+// and any-to-any currency pairing via CURRENCIES

@@ -1,24 +1,12 @@
+// config/seo-corridors.ts — SEO-specific configuration
+// Re-exports corridor data from config/corridors.ts and generates provider pairs
+
 import { ProviderPair } from '@/modules/rates/types'
+import { CORRIDORS } from '@/config/corridors'
 
-export interface Corridor {
-  from: string
-  to: string
-  fromCountry: string
-  toCountry: string
-  fromFlag: string
-  toFlag: string
-}
-
-export const CORRIDORS: Corridor[] = [
-  { from: "GBP", to: "NGN", fromCountry: "United Kingdom", toCountry: "Nigeria", fromFlag: "🇬🇧", toFlag: "🇳🇬" },
-  { from: "USD", to: "NGN", fromCountry: "United States", toCountry: "Nigeria", fromFlag: "🇺🇸", toFlag: "🇳🇬" },
-  { from: "EUR", to: "NGN", fromCountry: "Europe", toCountry: "Nigeria", fromFlag: "🇪🇺", toFlag: "🇳🇬" },
-  { from: "GBP", to: "KES", fromCountry: "United Kingdom", toCountry: "Kenya", fromFlag: "🇬🇧", toFlag: "🇰🇪" },
-  { from: "USD", to: "GHS", fromCountry: "United States", toCountry: "Ghana", fromFlag: "🇺🇸", toFlag: "🇬🇭" },
-  { from: "GBP", to: "GHS", fromCountry: "United Kingdom", toCountry: "Ghana", fromFlag: "🇬🇧", toFlag: "🇬🇭" },
-  { from: "USD", to: "KES", fromCountry: "United States", toCountry: "Kenya", fromFlag: "🇺🇸", toFlag: "🇰🇪" },
-  { from: "CAD", to: "NGN", fromCountry: "Canada", toCountry: "Nigeria", fromFlag: "🇨🇦", toFlag: "🇳🇬" },
-]
+// Re-export for backwards compatibility
+export { CORRIDORS } from '@/config/corridors'
+export type { Corridor } from '@/config/corridors'
 
 export const ACTIVE_PROVIDERS = [
   "Wise", 
@@ -28,7 +16,7 @@ export const ACTIVE_PROVIDERS = [
   "TapTap Send"
 ]
 
-const formatSlugStr = (name: string) => 
+const formatSlugStr = (name: string): string => 
   name.toLowerCase().replace(/\s+/g, '')
 
 export const PROVIDER_PAIRS: ProviderPair[] = CORRIDORS.flatMap((corridor) => {
@@ -39,8 +27,6 @@ export const PROVIDER_PAIRS: ProviderPair[] = CORRIDORS.flatMap((corridor) => {
       const p1 = ACTIVE_PROVIDERS[i]
       const p2 = ACTIVE_PROVIDERS[j]
 
-      // Use full corridor in slug to prevent collisions
-      // e.g. wise-vs-remitly-gbp-ngn NOT wise-vs-remitly-nigeria
       const corridorSlug = `${corridor.from}-${corridor.to}`
         .toLowerCase()
       
