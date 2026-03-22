@@ -34,42 +34,6 @@ export async function getAlertsByEmail(email: string): Promise<RateAlert[]> {
     return (data || []) as RateAlert[];
 }
 
-export async function checkAndTriggerAlerts(
-    fromCurrency: string,
-    toCurrency: string,
-    currentRate: number
-): Promise<RateAlert[]> {
-    // Find all active, untriggered alerts where current rate meets/exceeds target
-    const { data: matchedAlerts, error } = await supabaseAdmin
-        .from('rate_alerts')
-        .select('*')
-        .eq('from_currency', fromCurrency)
-        .eq('to_currency', toCurrency)
-        .eq('is_active', true)
-        .eq('is_triggered', false)
-        .lte('target_rate', currentRate);
-
-    if (error) throw new Error(`Failed to check alerts: ${error.message}`);
-    if (!matchedAlerts || matchedAlerts.length === 0) return [];
-
-    // Mark each matched alert as triggered
-    const ids = matchedAlerts.map((a: RateAlert) => a.id);
-    const { error: updateError } = await supabaseAdmin
-        .from('rate_alerts')
-        .update({
-            is_triggered: true,
-            triggered_at: new Date().toISOString(),
-            current_rate: currentRate,
-            is_active: false,
-        })
-        .in('id', ids);
-
-    if (updateError) {
-        console.error('Failed to mark alerts as triggered:', updateError);
-    }
-
-    return matchedAlerts as RateAlert[];
-}
 
 export async function deleteAlert(id: string): Promise<void> {
     const { error } = await supabaseAdmin

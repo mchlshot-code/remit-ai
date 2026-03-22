@@ -14,7 +14,7 @@ import { RateAlertForm } from '@/components/alerts/rate-alert-form';
 import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { CORRIDORS } from '@/config/seo-corridors';
-import { TrendingUp, ArrowRight } from 'lucide-react';
+
 import { Flag } from '@/components/ui/flag';
 import { CURRENCY_TO_COUNTRY } from '@/lib/constants';
 

@@ -36,10 +36,13 @@ Deno.serve(async (req: Request) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // 1. Find all active, untriggered alerts matching this currency pair
+    const [fromCurrency, toCurrency] = record.currency_pair.split("_");
+
     const { data: matchedAlerts, error: fetchError } = await supabase
-      .from("user_price_alerts")
+      .from("rate_alerts")
       .select("*")
-      .eq("currency_pair", record.currency_pair)
+      .eq("from_currency", fromCurrency)
+      .eq("to_currency", toCurrency)
       .eq("is_active", true)
       .eq("is_triggered", false)
       .lte("target_rate", record.official_rate);
@@ -65,7 +68,7 @@ Deno.serve(async (req: Request) => {
     // 2. Mark matched alerts as triggered
     const ids = matchedAlerts.map((a: { id: string }) => a.id);
     const { error: updateError } = await supabase
-      .from("user_price_alerts")
+      .from("rate_alerts")
       .update({
         is_triggered: true,
         triggered_at: new Date().toISOString(),

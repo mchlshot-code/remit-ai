@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils"
+import Image from "next/image"
 
 interface FlagProps {
   countryCode: string  // e.g. "gb", "ng", "us"
@@ -8,7 +9,7 @@ interface FlagProps {
 
 export function Flag({ countryCode, size = 20, className }: FlagProps) {
   return (
-    <img
+    <Image
       src={`https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`}
       width={size}
       height={Math.round(size * 0.75)}
