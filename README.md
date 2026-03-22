@@ -21,7 +21,7 @@ RemitAI does the comparison for you — and shows both the bank rate and the par
 - **Best pick engine** — highlights the highest-receive-amount provider automatically
 - **AI assistant** — answers questions about fees, speed, and timing using live rate data
 - **Rate alerts** — email notification when any provider hits your target rate
-- **Programmatic SEO** — dynamic landing pages and automated XML sitemap for 240+ global remittance corridors
+- **Programmatic SEO** — dynamic landing pages and automated XML sitemap for 200+ global remittance corridors
 - **Affiliate Routing Engine** — secure, server-side redirect system (`/go/[provider]`) to protect tracking IDs, bypass ad-blockers, and log conversion clicks
 
 ---

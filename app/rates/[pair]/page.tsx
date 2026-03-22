@@ -70,8 +70,8 @@ export default async function RatesPage({ params }: Props) {
   ]
 
   return (
-    <main className="min-h-screen bg-slate-50/50 pb-20">
-      <section className="bg-slate-900 text-white pt-20 pb-32 px-6">
+    <main className="min-h-screen bg-slate-950 pb-20">
+      <section className="bg-slate-900/50 text-white pt-20 pb-32 px-6 border-b border-slate-800">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 text-emerald-400 rounded-full text-sm font-bold mb-6 border border-emerald-500/20">
             <TrendingUp className="w-4 h-4" />
@@ -90,14 +90,14 @@ export default async function RatesPage({ params }: Props) {
 
       <div className="max-w-4xl mx-auto px-6 -mt-16 space-y-8">
         {/* Main Rate Display */}
-        <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 border border-slate-100">
+        <div className="bg-slate-900 rounded-3xl shadow-2xl p-8 md:p-12 border border-slate-800">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
               <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Current Mid-Market Rate</p>
               <div className="flex items-baseline gap-3 mb-6">
-                <span className="text-6xl font-black text-slate-900">1.00</span>
+                <span className="text-6xl font-black text-white">1.00</span>
                 <span className="text-2xl font-bold text-slate-400">{config.from} =</span>
-                <span className="text-6xl font-black text-emerald-600">
+                <span className="text-6xl font-black text-emerald-400">
                   {baseRate.toFixed(2)}
                 </span>
                 <span className="text-2xl font-bold text-slate-400">{config.to}</span>
@@ -108,10 +108,10 @@ export default async function RatesPage({ params }: Props) {
               </p>
             </div>
             
-            <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+            <div className="bg-slate-950 rounded-2xl p-6 border border-slate-800">
               <div className="flex justify-between items-center mb-4">
-                <p className="text-sm font-bold text-slate-900">7-Day Trend</p>
-                <span className="text-xs font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-md">+2.4%</span>
+                <p className="text-sm font-bold text-slate-200">7-Day Trend</p>
+                <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">+2.4%</span>
               </div>
               <SparklineChart data={chartData} />
               <p className="text-xs text-slate-400 mt-4 text-center italic">Market volatility based on daily close prices</p>
@@ -146,7 +146,7 @@ export default async function RatesPage({ params }: Props) {
           <Link 
             href={bestOption.link}
             target="_blank"
-            className="w-full md:w-auto px-8 py-4 bg-white text-emerald-700 font-bold rounded-xl hover:scale-105 transition-transform text-center shadow-lg"
+            className="w-full md:w-auto px-8 py-4 bg-slate-950 text-emerald-400 font-bold rounded-xl hover:scale-105 transition-transform text-center shadow-lg hover:text-emerald-300"
           >
             Send Now
           </Link>
@@ -155,21 +155,29 @@ export default async function RatesPage({ params }: Props) {
 
         {/* Converter / Input Form */}
         <div className="flex flex-col items-center">
-          <h2 className="text-2xl font-bold text-slate-900 mb-8 mt-8">Calculate your transfer</h2>
+          <h2 className="text-2xl font-bold text-white mb-8 mt-8">Calculate your transfer</h2>
           <RateInputForm 
             defaultSource={config.from}
             defaultTarget={config.to}
           />
         </div>
 
+        {/* Dynamic SEO Content Block */}
+        <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-800 max-w-2xl mx-auto text-slate-300 text-sm md:text-base leading-relaxed mt-8">
+          <h2 className="text-xl font-bold text-white mb-3">How to get the best exchange rate to {config.toCountry}</h2>
+          <p>
+            When sending money from {config.from} to {config.to}, the mid-market rate is the truest benchmark. However, traditional banks often hide markup fees in their exchange rates. RemitAI compares top providers like Wise, LemFi, and Sendwave to ensure your remittance to {config.toCountry} avoids hidden margins, getting more money directly to your recipient.
+          </p>
+        </div>
+
         {/* Footer Link */}
-        <div className="text-center pt-8 border-t border-slate-200">
+        <div className="text-center pt-8 border-t border-slate-800">
            <Link 
             href={`/compare/${config.from.toLowerCase()}-to-${config.to.toLowerCase()}`}
-            className="inline-flex items-center gap-3 text-slate-900 font-bold group"
+            className="inline-flex items-center gap-3 text-emerald-400 hover:text-emerald-300 font-bold group"
           >
             See full comparison of all {config.toCountry} providers
-            <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center group-hover:translate-x-2 transition-transform">
+            <div className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center group-hover:translate-x-2 transition-transform">
               <ArrowRight className="w-5 h-5" />
             </div>
           </Link>
