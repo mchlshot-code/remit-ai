@@ -3,7 +3,7 @@ name: Rates Update Cron
 on:
   schedule:
     # Run at minute 0 past every 2nd hour
-    - cron: '0 */2 * * *'
+    - cron: '*/30 * * * *'
   # Allow manual trigger for testing
   workflow_dispatch:
 

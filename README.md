@@ -1,4 +1,3 @@
-
 # RemitAI
 
 > AI-powered remittance rate comparison for the African diaspora. See the real rate. Send more home.
@@ -22,7 +21,8 @@ RemitAI does the comparison for you — and shows both the bank rate and the par
 - **Best pick engine** — highlights the highest-receive-amount provider automatically
 - **AI assistant** — answers questions about fees, speed, and timing using live rate data
 - **Rate alerts** — email notification when any provider hits your target rate
-- **Programmatic SEO** — dynamic pages for 80+ corridors and provider pairs
+- **Programmatic SEO** — dynamic landing pages and automated XML sitemap for 240+ global remittance corridors
+- **Affiliate Routing Engine** — secure, server-side redirect system (`/go/[provider]`) to protect tracking IDs, bypass ad-blockers, and log conversion clicks
 
 ---
 
@@ -36,6 +36,7 @@ RemitAI does the comparison for you — and shows both the bank rate and the par
 | Database | Supabase (PostgreSQL + RLS) |
 | State | Zustand + TanStack Query |
 | Email | Resend |
+| Testing | Vitest |
 | Deployment | Vercel |
 | Rates | fawazahmed0 currency API + parallel market estimate |
 
@@ -43,21 +44,25 @@ RemitAI does the comparison for you — and shows both the bank rate and the par
 
 ## Project Structure
 
-```
+```text
 remit-ai/
 ├── app/
 │   ├── page.tsx                  # Landing + comparison UI
+│   ├── send-money/               # SEO Hub & 240+ Dynamic Corridor Pages
+│   ├── go/[provider]/            # Affiliate redirect & tracking engine
 │   ├── chat/page.tsx             # AI Assistant
 │   ├── alerts/page.tsx           # Rate alert management
+│   ├── sitemap.ts                # Automated XML generation
+│   ├── robots.ts                 # Crawler budget optimization
 │   └── api/                      # rates, compare, chat, alerts
 ├── modules/
 │   ├── rates/                    # Fetchers, normalizer, types
 │   ├── ai-assistant/             # Prompt builder, streaming handler
 │   └── alerts/                   # Alert logic, email sender
-├── components/                   # UI components
+├── components/                   # UI components (Grid, Flags, Cards)
 ├── lib/                          # Supabase client, utils
-└── config/                       # Provider config, constants
-```
+├── config/                       # Provider config, constants
+└── vitest.config.ts              # Unit testing configuration
 
 Architectural rules → [`Agent.md`](./Agent.md)  
 Product philosophy → [`Philosophy.md`](./Philosophy.md)
@@ -66,7 +71,9 @@ Product philosophy → [`Philosophy.md`](./Philosophy.md)
 
 ## Deployment
 
-Hosted on Vercel. Environment variables are documented in `.env.local.example`. The included `vercel.json` schedules a cron job every 30 minutes to check rate alerts.
+Frontend and serverless functions are hosted on Vercel. Environment variables (including secure Affiliate URLs) are documented in `.env.local.example`. 
+
+**Data Pipeline:** Rate updates and parallel market scrapes are decoupled from the frontend. A GitHub Actions workflow runs a cron job on a strict interval to fetch fresh data, normalize it, and push it to Supabase, triggering frontend cache invalidation only when necessary.
 
 ---
 

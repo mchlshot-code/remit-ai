@@ -2,7 +2,7 @@
 // Re-exports corridor data from config/corridors.ts and generates provider pairs
 
 import { ProviderPair } from '@/modules/rates/types'
-import { CORRIDORS } from '@/config/corridors'
+import { CORRIDORS, FORWARD_CORRIDORS } from '@/config/corridors'
 
 // Re-export for backwards compatibility
 export { CORRIDORS } from '@/config/corridors'
@@ -19,7 +19,7 @@ export const ACTIVE_PROVIDERS = [
 const formatSlugStr = (name: string): string => 
   name.toLowerCase().replace(/\s+/g, '')
 
-export const PROVIDER_PAIRS: ProviderPair[] = CORRIDORS.flatMap((corridor) => {
+export const PROVIDER_PAIRS: ProviderPair[] = FORWARD_CORRIDORS.flatMap((corridor) => {
   const pairs: ProviderPair[] = []
   
   for (let i = 0; i < ACTIVE_PROVIDERS.length; i++) {

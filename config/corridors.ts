@@ -12,17 +12,31 @@ export interface Corridor {
   toFlag: string
 }
 
-/** All popular corridors including reverse directions — used in sitemap and corridor pages */
+/** Forward-only corridors (no reverse pairs) — used for review pages to avoid duplicate content */
+export const FORWARD_CORRIDORS = [
+  { from: 'GBP', to: 'NGN' },
+  { from: 'USD', to: 'NGN' },
+  { from: 'EUR', to: 'NGN' },
+  { from: 'GBP', to: 'KES' },
+  { from: 'USD', to: 'KES' },
+  { from: 'USD', to: 'GHS' },
+  { from: 'GBP', to: 'GHS' },
+  { from: 'AED', to: 'NGN' },
+  { from: 'CAD', to: 'NGN' },
+  { from: 'AUD', to: 'NGN' },
+  { from: 'USD', to: 'ZAR' },
+  { from: 'USD', to: 'INR' },
+  { from: 'GBP', to: 'INR' },
+  { from: 'USD', to: 'EGP' },
+] as const
+
+/** All popular corridors including reverse directions — used in sitemap, compare, and corridor pages */
 export const POPULAR_CORRIDORS = [
-  { from: 'GBP', to: 'NGN' }, { from: 'NGN', to: 'GBP' },
-  { from: 'USD', to: 'NGN' }, { from: 'NGN', to: 'USD' },
-  { from: 'EUR', to: 'NGN' }, { from: 'NGN', to: 'EUR' },
-  { from: 'GBP', to: 'KES' }, { from: 'KES', to: 'GBP' },
-  { from: 'USD', to: 'KES' }, { from: 'USD', to: 'GHS' },
-  { from: 'GBP', to: 'GHS' }, { from: 'AED', to: 'NGN' },
-  { from: 'CAD', to: 'NGN' }, { from: 'AUD', to: 'NGN' },
-  { from: 'USD', to: 'ZAR' }, { from: 'USD', to: 'INR' },
-  { from: 'GBP', to: 'INR' }, { from: 'USD', to: 'EGP' },
+  ...FORWARD_CORRIDORS,
+  { from: 'NGN', to: 'GBP' },
+  { from: 'NGN', to: 'USD' },
+  { from: 'NGN', to: 'EUR' },
+  { from: 'KES', to: 'GBP' },
 ] as const
 
 /** Build a full Corridor object from currency codes using CURRENCIES as source of truth */
