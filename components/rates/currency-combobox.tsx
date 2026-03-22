@@ -28,13 +28,9 @@ export function CurrencyCombobox({ value, onChange, label, disabled = false }: C
     <div className="flex flex-col">
       <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1">{label}</label>
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger 
-          render={<button />}
+        <PopoverTrigger
+          render={<button type="button" />}
           disabled={disabled}
-          onClick={(e) => {
-            e.preventDefault();
-            setOpen(!open);
-          }}
           className="w-full h-14 px-4 rounded-2xl border bg-background font-bold text-lg focus:ring-2 focus:ring-emerald-500 outline-none transition-all cursor-pointer flex items-center gap-3 justify-between"
         >
           <div className="flex items-center gap-3 min-w-0">
