@@ -1,0 +1,23 @@
+name: Rates Update Cron
+
+on:
+  schedule:
+    # Run at minute 0 past every 2nd hour
+    - cron: '0 */2 * * *'
+  # Allow manual trigger for testing
+  workflow_dispatch:
+
+jobs:
+  update-rates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5 # Prevents hanging jobs from eating runner minutes
+    
+    steps:
+      - name: Trigger Rates API Endpoint
+        # Using curl to hit the endpoint securely. 
+        # --fail: Causes curl to exit with a non-zero status if HTTP code is >= 400
+        # --silent --show-error: Hides progress bar but shows error messages
+        run: |
+          curl -X GET "${{ secrets.PROD_URL }}/api/cron/rates" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            --fail --silent --show-error
