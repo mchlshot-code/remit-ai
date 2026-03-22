@@ -7,6 +7,7 @@ import { Navigation } from "@/components/navigation";
 import { InstallPrompt } from "@/components/install-prompt";
 import Link from 'next/link';
 import { Analytics } from "@vercel/analytics/react";
+import { Toaster } from 'sonner';
 
 const syne = Syne({ 
   subsets: ["latin"],
@@ -67,6 +68,7 @@ export default function RootLayout({
             </footer>
           </div>
         </Providers>
+        <Toaster position="top-center" richColors />
         <Analytics />
       </body>
     </html>

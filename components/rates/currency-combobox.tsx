@@ -5,6 +5,8 @@ import { CURRENCIES, POPULAR_CURRENCIES, type Currency } from '@/config/currenci
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ChevronsUpDown } from 'lucide-react';
+import { CURRENCY_TO_COUNTRY } from '@/lib/constants';
+import { Flag } from '@/components/ui/flag';
 
 interface CurrencyComboboxProps {
   value: string;
@@ -26,14 +28,19 @@ export function CurrencyCombobox({ value, onChange, label, disabled = false }: C
     <div className="flex flex-col">
       <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1">{label}</label>
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger
+        <PopoverTrigger 
+          render={<button />}
           disabled={disabled}
+          onClick={(e) => {
+            e.preventDefault();
+            setOpen(!open);
+          }}
           className="w-full h-14 px-4 rounded-2xl border bg-background font-bold text-lg focus:ring-2 focus:ring-emerald-500 outline-none transition-all cursor-pointer flex items-center gap-3 justify-between"
         >
           <div className="flex items-center gap-3 min-w-0">
             {selected && (
               <>
-                <span className="text-xl flex-shrink-0">{selected.flag}</span>
+                <Flag countryCode={CURRENCY_TO_COUNTRY[selected.code] || selected.code.slice(0, 2)} size={24} className="flex-shrink-0" />
                 <span className="truncate">{selected.code}</span>
               </>
             )}
@@ -65,7 +72,7 @@ export function CurrencyCombobox({ value, onChange, label, disabled = false }: C
                       setSearch('');
                     }}
                   >
-                    <span className="text-lg mr-1">{c.flag}</span>
+                    <Flag countryCode={CURRENCY_TO_COUNTRY[c.code] || c.code.slice(0, 2)} size={20} className="mr-2 flex-shrink-0" />
                     <span className="font-bold">{c.code}</span>
                     <span className="text-muted-foreground ml-1">· {c.country}</span>
                   </CommandItem>
@@ -84,7 +91,7 @@ export function CurrencyCombobox({ value, onChange, label, disabled = false }: C
                       setSearch('');
                     }}
                   >
-                    <span className="text-lg mr-1">{c.flag}</span>
+                    <Flag countryCode={CURRENCY_TO_COUNTRY[c.code] || c.code.slice(0, 2)} size={20} className="mr-2 flex-shrink-0" />
                     <span className="font-bold">{c.code}</span>
                     <span className="text-muted-foreground ml-1">· {c.country}</span>
                   </CommandItem>

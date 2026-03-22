@@ -1,3 +1,4 @@
+
 # RemitAI
 
 > AI-powered remittance rate comparison for the African diaspora. See the real rate. Send more home.
@@ -10,7 +11,7 @@ Live at **[remitaiapp.com](https://remitaiapp.com)**
 
 Sending money to Nigeria, Ghana, or Kenya means navigating hidden fees, misleading exchange rates, and a gap between the official rate and what your family actually receives. Most people stick with one provider because comparing is too painful.
 
-RemitAI does the comparison for you — and shows you both the bank rate and the parallel market rate, so you see the full picture before you send.
+RemitAI does the comparison for you — and shows both the bank rate and the parallel market rate, so you see the full picture before you send.
 
 ---
 
@@ -40,24 +41,6 @@ RemitAI does the comparison for you — and shows you both the bank rate and the
 
 ---
 
-## Getting Started
-
-**Prerequisites:** Node.js 18+, Supabase account, Groq API key, Resend account
-
-```bash
-git clone https://github.com/mchlshot-code/remit-ai.git
-cd remit-ai
-npm install
-cp .env.local.example .env.local
-npm run dev
-```
-
-Fill in `.env.local` — see `.env.local.example` for all required keys.
-
-**Database setup:** Run the SQL in `/supabase/migrations/` in your Supabase SQL editor.
-
----
-
 ## Project Structure
 
 ```
@@ -76,18 +59,14 @@ remit-ai/
 └── config/                       # Provider config, constants
 ```
 
-Architectural rules are documented in [`Agent.md`](./Agent.md).  
-Product philosophy is in [`Philosophy.md`](./Philosophy.md).
+Architectural rules → [`Agent.md`](./Agent.md)  
+Product philosophy → [`Philosophy.md`](./Philosophy.md)
 
 ---
 
 ## Deployment
 
-```bash
-vercel
-```
-
-Set environment variables in the Vercel dashboard. The included `vercel.json` schedules a cron job every 30 minutes to check rate alerts.
+Hosted on Vercel. Environment variables are documented in `.env.local.example`. The included `vercel.json` schedules a cron job every 30 minutes to check rate alerts.
 
 ---
 
@@ -96,3 +75,5 @@ Set environment variables in the Vercel dashboard. The included `vercel.json` sc
 RemitAI is a comparison tool only. We are not a money transfer service. Always verify rates on the provider's official website before transferring. Rates shown are indicative and update every 30 minutes.
 
 ---
+
+*Built for the 3MTT NextGen Knowledge Showcase — Financial Inclusion pillar.*

@@ -12,6 +12,8 @@ import { useRatesStore } from '@/modules/rates/store';
 import { CURRENCY_SYMBOLS } from '@/config/currencies';
 import { POPULAR_CORRIDORS } from '@/config/corridors';
 
+import { toast } from 'sonner';
+
 const AlertSchema = z.object({
   targetRate: z.number().min(0.01, 'Target rate must be positive'),
 });
@@ -20,9 +22,10 @@ type AlertFormData = z.infer<typeof AlertSchema>;
 
 interface RateAlertFormProps {
   userEmail: string;
+  onAlertCreated?: (alert: any) => void;
 }
 
-export function RateAlertForm({ userEmail }: RateAlertFormProps) {
+export function RateAlertForm({ userEmail, onAlertCreated }: RateAlertFormProps) {
   const { sourceCurrency: storeSource, targetCurrency: storeTarget } = useRatesStore();
   
   // Local state for corridor selection (defaults to store values if supported, else first supported)
@@ -37,7 +40,7 @@ export function RateAlertForm({ userEmail }: RateAlertFormProps) {
   const srcSymbol = CURRENCY_SYMBOLS[fromCurr] || fromCurr;
   const tgtSymbol = CURRENCY_SYMBOLS[toCurr] || toCurr;
 
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
   
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<AlertFormData>({
     resolver: zodResolver(AlertSchema),
@@ -62,7 +65,6 @@ export function RateAlertForm({ userEmail }: RateAlertFormProps) {
 
   const onSubmit = async (data: AlertFormData) => {
     try {
-      setSuccessMsg(null);
       const res = await fetch('/api/alerts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -74,12 +76,16 @@ export function RateAlertForm({ userEmail }: RateAlertFormProps) {
         })
       });
       
-      if (!res.ok) throw new Error('Failed to create alert');
+      if (!res.ok) {
+        toast.error('Failed to create alert');
+        throw new Error('Failed to create alert');
+      }
+
+      const alertData = await res.json();
+      onAlertCreated?.(alertData);
       
-      setSuccessMsg(`Alert set! We'll email you when the rate hits ${tgtSymbol}${data.targetRate}`);
+      toast.success(`Alert set! We'll email you when the rate hits ${tgtSymbol}${data.targetRate}`);
       reset();
-      
-      setTimeout(() => setSuccessMsg(null), 5000);
     } catch (e) {
       console.error(e);
     }
@@ -173,19 +179,6 @@ export function RateAlertForm({ userEmail }: RateAlertFormProps) {
           </button>
         </form>
 
-        <AnimatePresence>
-          {successMsg && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="mt-6 bg-emerald-500/10 text-emerald-600 border-2 border-emerald-500/20 px-5 py-4 rounded-2xl text-sm font-bold flex items-center gap-3"
-            >
-              <ShieldCheck className="w-5 h-5 flex-shrink-0" />
-              {successMsg}
-            </motion.div>
-          )}
-        </AnimatePresence>
       </motion.div>
     </div>
   );
