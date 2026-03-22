@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { RateAlertForm } from './rate-alert-form';
 import { AlertsList } from './alerts-list';
 
-interface Alert {
+export interface Alert {
   id: string;
   source_currency: string;
   target_currency: string;

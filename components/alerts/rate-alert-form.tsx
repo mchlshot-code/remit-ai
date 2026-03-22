@@ -4,15 +4,16 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { NormalizedRatesResponse } from '@/modules/rates/types';
-import { Bell, ShieldCheck } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { useRatesStore } from '@/modules/rates/store';
 import { CURRENCY_SYMBOLS } from '@/config/currencies';
 import { POPULAR_CORRIDORS } from '@/config/corridors';
 
 import { toast } from 'sonner';
+import type { Alert } from './alerts-manager';
 
 const AlertSchema = z.object({
   targetRate: z.number().min(0.01, 'Target rate must be positive'),
@@ -22,7 +23,7 @@ type AlertFormData = z.infer<typeof AlertSchema>;
 
 interface RateAlertFormProps {
   userEmail: string;
-  onAlertCreated?: (alert: any) => void;
+  onAlertCreated?: (alert: Alert) => void;
 }
 
 export function RateAlertForm({ userEmail, onAlertCreated }: RateAlertFormProps) {
