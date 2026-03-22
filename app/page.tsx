@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Sparkles } from 'lucide-react';
@@ -81,6 +81,39 @@ export default function Home() {
     refetchInterval: 1800000, // 30 mins
   });
 
+  const validCorridors = useMemo(() => {
+    if (!trendingRates?.rates) return [];
+    
+    const africanCurrencies = ['NGN', 'KES', 'GHS', 'ZAR', 'EGP'];
+    const priorityOrder = ['GBP-NGN', 'USD-NGN', 'CAD-NGN', 'EUR-NGN'];
+
+    const filtered = CORRIDORS.filter(corridor => {
+      // 1. Filter out African origins
+      if (africanCurrencies.includes(corridor.from)) return false;
+
+      // 2. Filter out broken/null rates
+      const rateInfo = trendingRates.rates.find(r => r.pair === `${corridor.from}-${corridor.to}`);
+      if (!rateInfo || !rateInfo.rate || rateInfo.rate <= 0) return false;
+
+      return true;
+    });
+
+    // 3. Enforce priority sorting
+    return filtered.sort((a, b) => {
+      const pairA = `${a.from}-${a.to}`;
+      const pairB = `${b.from}-${b.to}`;
+      
+      const indexA = priorityOrder.indexOf(pairA);
+      const indexB = priorityOrder.indexOf(pairB);
+      
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      
+      return pairA.localeCompare(pairB);
+    });
+  }, [trendingRates]);
+
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col items-center">
       {/* Hero Section */}
@@ -121,41 +154,35 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4 text-left">
-            {CORRIDORS.map((corridor) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-4">
+            {validCorridors.map((corridor) => {
               const rateInfo = trendingRates?.rates.find(r => r.pair === `${corridor.from}-${corridor.to}`);
               return (
                 <Link 
                   key={`${corridor.from}-${corridor.to}`}
                   href={`/compare/${corridor.from.toLowerCase()}-to-${corridor.to.toLowerCase()}`}
-                  className="group bg-card border rounded-2xl p-4 md:p-6 hover:border-emerald-500/50 hover:shadow-lg transition-all flex flex-row items-center justify-between md:flex-col md:items-start"
+                  className="group bg-card border rounded-2xl p-5 hover:border-emerald-500/50 hover:shadow-lg transition-all flex flex-col justify-between h-full min-h-[160px] text-center"
                 >
-                  <div className="flex items-center md:items-start md:justify-between w-full md:mb-4 gap-3 md:gap-0">
-                    <div className="flex items-center gap-2">
-                       <Flag countryCode={CURRENCY_TO_COUNTRY[corridor.from]} size={24} />
-                       <TrendingUp className="w-3 h-3 text-muted-foreground/30 hidden md:block" />
-                       <Flag countryCode={CURRENCY_TO_COUNTRY[corridor.to]} size={24} />
+                  <div className="flex flex-col items-center w-full">
+                    <div className="flex items-center justify-center gap-2 text-lg font-bold w-full mb-1">
+                       <Flag countryCode={CURRENCY_TO_COUNTRY[corridor.from]} size={28} />
+                       <span>{corridor.from}</span>
+                       <span className="text-muted-foreground/30 font-light">→</span>
+                       <Flag countryCode={CURRENCY_TO_COUNTRY[corridor.to]} size={28} />
+                       <span>{corridor.to}</span>
                     </div>
                     
-                    <div className="flex flex-col md:mt-2">
-                      <h3 className="font-bold text-base md:text-lg">{corridor.from} → {corridor.to}</h3>
-                      <p className="text-[10px] md:text-xs text-muted-foreground hidden md:block">{corridor.fromCountry} to {corridor.toCountry}</p>
-                    </div>
-
-                    <ArrowRight className="w-5 h-5 ml-auto text-muted-foreground group-hover:text-emerald-500 group-hover:translate-x-1 transition-all hidden md:block" />
+                    <p className="truncate text-sm text-gray-400 mt-1 block w-full">
+                      {corridor.fromCountry} to {corridor.toCountry}
+                    </p>
                   </div>
                   
-                  <div className="md:pt-4 md:border-t md:border-border md:w-full mt-0 md:mt-auto text-right md:text-left">
-                    <p className="text-[8px] md:text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-0 md:mb-1">
-                      <span className="md:inline hidden">Market Rate</span>
-                      <span className="md:hidden inline">RATE</span>
+                  <div className="mt-auto pt-4 border-t border-border w-full">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-1">
+                      Market Rate
                     </p>
-                    <p className="text-sm md:text-lg font-black text-emerald-600 whitespace-nowrap">
-                      <span className="hidden md:inline">1 {corridor.from} = </span>
-                      <span className="text-base md:text-xl">
-                        {rateInfo?.rate ? rateInfo.rate.toFixed(2) : '---'}
-                      </span>
-                      <span className="md:inline hidden"> {corridor.to}</span>
+                    <p className="text-lg font-black text-emerald-600 whitespace-nowrap">
+                      1 {corridor.from} = {rateInfo?.rate ? rateInfo.rate.toFixed(2) : '---'} {corridor.to}
                     </p>
                   </div>
                 </Link>
