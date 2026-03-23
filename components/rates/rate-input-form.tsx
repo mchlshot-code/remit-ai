@@ -54,7 +54,7 @@ export function RateInputForm({ onSubmit, isLoading = false, defaultSource = 'GB
           window.location.href = `/compare/${data.sourceCurrency.toLowerCase()}-to-${data.targetCurrency.toLowerCase()}?amount=${data.amount}`;
         }
       })}
-      className="w-full max-w-lg bg-card border shadow-xl rounded-3xl p-5 md:p-8 mb-8 md:mb-16 flex flex-col gap-4"
+      className="w-full max-w-lg bg-slate-900 border border-slate-800 shadow-2xl rounded-3xl p-5 md:p-8 mb-8 md:mb-16 flex flex-col gap-4"
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.2 }}
@@ -75,10 +75,10 @@ export function RateInputForm({ onSubmit, isLoading = false, defaultSource = 'GB
           type="button"
           onClick={handleSwap}
           disabled={isLoading}
-          className="flex-shrink-0 w-10 h-10 mb-0.5 rounded-full border-2 border-border bg-background hover:bg-muted hover:border-emerald-500/40 active:scale-90 flex items-center justify-center transition-all disabled:opacity-50"
+          className="flex-shrink-0 w-10 h-10 mb-0.5 rounded-full border-2 border-slate-800 bg-slate-950 hover:bg-slate-900 hover:border-emerald-500/40 active:scale-90 flex items-center justify-center transition-all disabled:opacity-50"
           aria-label="Swap currencies"
         >
-          <ArrowLeftRight className="w-4 h-4 text-muted-foreground" />
+          <ArrowLeftRight className="w-4 h-4 text-slate-500" />
         </button>
         
         <div className="flex-1 min-w-0">
@@ -93,14 +93,14 @@ export function RateInputForm({ onSubmit, isLoading = false, defaultSource = 'GB
 
       {/* Row 2: Amount */}
       <div className="w-full">
-        <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1 block">Amount to Send</label>
+        <label className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2 px-1 block">Amount to Send</label>
         <div className="relative">
-          <span className="absolute left-5 top-1/2 -translate-y-1/2 text-xl font-bold text-foreground/50">{currencySymbol}</span>
+          <span className="absolute left-5 top-1/2 -translate-y-1/2 text-xl font-bold text-slate-500/50">{currencySymbol}</span>
           <input 
             type="number"
             disabled={isLoading}
             {...register('amount', { valueAsNumber: true })}
-            className={`w-full h-16 pl-12 pr-5 rounded-2xl border bg-background text-2xl font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all ${errors.amount ? 'border-destructive' : 'border-border'}`}
+            className={`w-full h-16 pl-12 pr-5 rounded-2xl border bg-slate-950 text-white text-2xl font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all ${errors.amount ? 'border-destructive' : 'border-slate-800'}`}
             placeholder="0.00"
           />
         </div>

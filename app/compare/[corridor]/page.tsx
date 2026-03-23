@@ -54,33 +54,41 @@ export default async function ComparePage({ params }: Props) {
   }).slice(0, 3)
 
   return (
-    <main className="min-h-screen bg-background text-foreground flex flex-col items-center">
+    <main className="min-h-screen bg-slate-950 text-white flex flex-col items-center">
       <CompareClient 
         from={config.from}
         to={config.to}
         toCountry={config.toCountry}
       />
 
+      {/* Dynamic SEO Content Block */}
+      <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-800 max-w-2xl mx-auto text-slate-300 text-sm md:text-base leading-relaxed mt-8 mb-12">
+        <h2 className="text-xl font-bold text-white mb-3">How to get the best exchange rate to {config.toCountry}</h2>
+        <p>
+          When sending money from {config.from} to {config.to}, the mid-market rate is the truest benchmark. However, traditional banks often hide markup fees in their exchange rates. RemitAI compares top providers like Wise, LemFi, and Sendwave to ensure your remittance to {config.toCountry} avoids hidden margins, getting more money directly to your recipient.
+        </p>
+      </div>
+
       {/* Related Corridors */}
       {related.length > 0 && (
-        <section className="w-full max-w-5xl px-5 py-12 border-t border-border mt-10">
-          <h2 className="text-xl font-bold mb-6">Compare other corridors</h2>
+        <section className="w-full max-w-5xl px-5 py-12 border-t border-slate-800 mt-10">
+          <h2 className="text-xl font-bold mb-6 text-white">Compare other corridors</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {related.map((c) => (
               <Link 
                 key={`${c.from}-${c.to}`}
                 href={`/compare/${c.from.toLowerCase()}-to-${c.to.toLowerCase()}`}
-                className="bg-card border border-border rounded-xl p-4 hover:border-brand/40 transition-colors cursor-pointer group"
+                className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-emerald-500/40 transition-colors cursor-pointer group"
               >
                 <div className="flex items-center gap-2 mb-2">
                   <Flag countryCode={CURRENCY_TO_COUNTRY[c.from]} size={20} />
-                  <span className="text-xs text-muted-foreground mr-1">→</span>
+                  <span className="text-xs text-slate-500 mr-1">→</span>
                   <Flag countryCode={CURRENCY_TO_COUNTRY[c.to]} size={20} />
                 </div>
-                <p className="font-medium text-sm text-foreground">
+                <p className="font-medium text-sm text-white">
                   {c.from} → {c.to}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-slate-400 mt-1">
                   Best rates for {c.toCountry}
                 </p>
               </Link>

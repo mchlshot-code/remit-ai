@@ -66,10 +66,10 @@ export function CompareClient({ from, to, toCountry }: Props) {
           <span className="inline-block py-1 px-3 rounded-full bg-emerald-500/10 text-emerald-500 text-sm font-medium mb-6">
             Live Rates. Zero Hidden Agendas.
           </span>
-          <h1 className="font-display hero-heading font-extrabold tracking-tight mb-6 text-balance px-4 text-center items-center justify-center gap-3 flex flex-wrap">
-             Send <Flag countryCode={CURRENCY_TO_COUNTRY[from]} size={32} /> {from} to {toCountry} — <span className="text-emerald-500">Compare Live Rates</span>
+          <h1 className="font-display hero-heading font-extrabold tracking-tight mb-6 text-balance px-4 text-center items-center justify-center gap-3 flex flex-wrap text-white">
+             Send <Flag countryCode={CURRENCY_TO_COUNTRY[from]} size={32} /> {from} to {toCountry} — <span className="text-emerald-400 font-black">Compare Live Rates</span>
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-sm md:max-w-2xl mx-auto mb-8 px-5 md:px-0">
+          <p className="text-lg md:text-xl text-slate-400 max-w-sm md:max-w-2xl mx-auto mb-8 px-5 md:px-0">
             Live rates from multiple providers · Updated 30 mins ago
           </p>
         </motion.div>
