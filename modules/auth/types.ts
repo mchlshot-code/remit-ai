@@ -1,3 +1,5 @@
+import { User } from '@supabase/supabase-js';
+
 export interface UserSession {
-    user: any | null; // Replace any with Supabase User type
+    user: User | null;
 }
