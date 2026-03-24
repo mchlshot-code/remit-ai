@@ -2,6 +2,7 @@ import { AlertsManager } from '@/components/alerts/alerts-manager';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { deleteAlert } from '@/modules/alerts/alert-service';
 
 export default async function AlertsPage() {
   const supabase = createClient();
@@ -16,12 +17,12 @@ export default async function AlertsPage() {
     .from('rate_alerts')
     .select('*')
     .eq('email', user.email)
+    .eq('is_active', true)
     .order('created_at', { ascending: false });
 
-  async function deleteAlert(id: string) {
+  async function deleteAlertAction(id: string) {
     'use server';
-    const supabase = createClient();
-    await supabase.from('rate_alerts').delete().eq('id', id);
+    await deleteAlert(id);
     revalidatePath('/alerts');
   }
 
@@ -37,7 +38,7 @@ export default async function AlertsPage() {
         <AlertsManager 
           initialAlerts={alerts || []} 
           userEmail={user.email!} 
-          onDeleteAction={deleteAlert} 
+          onDeleteAction={deleteAlertAction} 
         />
       </div>
     </main>
