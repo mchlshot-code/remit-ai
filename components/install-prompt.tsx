@@ -12,62 +12,95 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
+const STORAGE_KEY_INSTALLED = 'remitai_pwa_installed';
+const COOKIE_KEY_DISMISSED = 'remitai_pwa_dismissed';
+const DISMISS_DAYS = 7;
+
+/** Check if the app is running in standalone (installed PWA) mode. */
+function isStandaloneMode(): boolean {
+  if (typeof window === 'undefined') return false;
+  // iOS Safari
+  if ((navigator as unknown as { standalone?: boolean }).standalone === true) return true;
+  // Standard browsers (Chrome, Edge, etc.)
+  if (window.matchMedia('(display-mode: standalone)').matches) return true;
+  return false;
+}
+
+/** Set a cookie with a given name, value, and expiry in days. */
+function setCookie(name: string, value: string, days: number): void {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+}
+
+/** Read a cookie value by name. Returns null if not found. */
+function getCookie(name: string): string | null {
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 export function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    // 1. Never show inside an installed PWA (standalone mode)
+    if (isStandaloneMode()) return;
+
+    // 2. Never show if the user has already installed the app
+    if (localStorage.getItem(STORAGE_KEY_INSTALLED) === 'true') return;
+
+    // 3. Never show if the user manually dismissed within the last 7 days
+    if (getCookie(COOKIE_KEY_DISMISSED) === 'true') return;
+
     // Check if on mobile
-    const checkMobile = () => {
-      setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
-    };
-    checkMobile();
+    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
 
     // Listen for beforeinstallprompt
-    const handler = (e: Event) => {
-      // Prevent the mini-infobar from appearing on mobile
+    const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
-      // Stash the event so it can be triggered later.
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      
-      // Only show if not dismissed in this session
-      const isDismissed = sessionStorage.getItem('pwa-prompt-dismissed');
-      if (!isDismissed) {
-        setShowPrompt(true);
-      }
+      setShowPrompt(true);
     };
 
-    window.addEventListener('beforeinstallprompt', handler);
+    // Listen for the appinstalled event to permanently flag installation
+    const handleAppInstalled = () => {
+      localStorage.setItem(STORAGE_KEY_INSTALLED, 'true');
+      setShowPrompt(false);
+      setDeferredPrompt(null);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
 
-    // Show the install prompt
     await deferredPrompt.prompt();
 
-    // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.userChoice;
-    
+
     if (outcome === 'accepted') {
+      // The appinstalled listener will handle persisting the flag
       console.log('User accepted the PWA install prompt');
     } else {
       console.log('User dismissed the PWA install prompt');
     }
 
-    // We've used the prompt, and can't use it again, throw it away
     setDeferredPrompt(null);
     setShowPrompt(false);
   };
 
   const handleDismiss = () => {
     setShowPrompt(false);
-    sessionStorage.setItem('pwa-prompt-dismissed', 'true');
+    // Set a 7-day cookie so the prompt stays hidden across sessions
+    setCookie(COOKIE_KEY_DISMISSED, 'true', DISMISS_DAYS);
   };
 
   if (!showPrompt || !isMobile) return null;
