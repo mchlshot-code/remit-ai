@@ -2,7 +2,7 @@ export const runtime = 'edge';
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { streamText } from 'ai';
+import { streamText, stepCountIs } from 'ai';
 import { groq } from '@ai-sdk/groq';
 import { buildSystemPrompt } from '@/modules/ai-assistant/prompt-builder';
 import { REMITAI_TOOLS } from '@/modules/ai-assistant/tool-definitions';
@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
       messages: parsed.messages,
       maxOutputTokens: 1024,
       temperature: 0.3,
+      stopWhen: stepCountIs(5),
       tools: {
         getLiveRates: {
           description: REMITAI_TOOLS.getLiveRates.description,

@@ -27,8 +27,8 @@ export function SparklineChart({ data, color = '#10b981' }: Props) {
     : data;
 
   return (
-    <div className="w-full h-16">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="w-full h-64 min-h-[250px]">
+      <ResponsiveContainer width="100%" height="100%" minHeight={250}>
         <LineChart data={displayData}>
           <YAxis hide domain={['auto', 'auto']} />
           <Line 

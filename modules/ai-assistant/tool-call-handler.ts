@@ -1,64 +1,65 @@
-interface RateResponse {
-  rates?: Array<{
-    isBestRate?: boolean;
-    savingsAgainstBest?: number;
-    [key: string]: unknown;
-  }>;
-  [key: string]: unknown;
-}
+import { fetchAllProviders, fetchBaseRate, fetchParallelRate } from '@/modules/rates/fetchers';
+import { normalizeAndCompare } from '@/modules/rates/normalizer';
+import { cacheRateSnapshot } from '@/modules/rates/cache-service';
+import { createAlert } from '@/modules/alerts/alert-service';
 
 export async function handleToolCall(
   toolName: string,
   toolArgs: Record<string, unknown>
 ): Promise<string> {
-  // Dynamically resolve the base URL for local, preview, and production environments
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL
-    ? process.env.NEXT_PUBLIC_APP_URL
-    : process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000';
-
   try {
     if (toolName === 'getLiveRates') {
-      const baseCurrency = String(toolArgs.baseCurrency);
+      const sourceCurrency = String(toolArgs.baseCurrency);
       const targetCurrency = String(toolArgs.targetCurrency);
+      const amount = 500; // default amount for assistant context
 
-      const res = await fetch(`${baseUrl}/api/rates`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sourceCurrency: baseCurrency, targetCurrency: targetCurrency, amount: 500 })
+      const baseRate = await fetchBaseRate(sourceCurrency, targetCurrency);
+      if (baseRate === null) {
+        return JSON.stringify({ error: `Exchange rate not available for ${sourceCurrency} → ${targetCurrency}` });
+      }
+
+      const rawRates = await fetchAllProviders({ sourceCurrency, targetCurrency, amount });
+      const result = normalizeAndCompare(rawRates, sourceCurrency);
+      
+      const isNgnCorridor = sourceCurrency === 'NGN' || targetCurrency === 'NGN';
+      const parallelRateEstimate = isNgnCorridor 
+          ? await fetchParallelRate(sourceCurrency, targetCurrency, baseRate) 
+          : undefined;
+
+      // Background cache (optional but keeps analytics/webhooks alive)
+      cacheRateSnapshot(
+          `${sourceCurrency}_${targetCurrency}`,
+          baseRate,
+          parallelRateEstimate?.estimatedParallelRate || null,
+          parallelRateEstimate?.source || 'jsdelivr'
+      ).catch(err => console.error('Tool cache write failed:', err));
+
+      return JSON.stringify({ 
+          baseRate,
+          parallelRateEstimate,
+          ...result 
       });
-      if (!res.ok) throw new Error('API request failed');
-      const data = await res.json() as unknown;
-      return JSON.stringify(data);
     }
 
     if (toolName === 'createRateAlert') {
       const email = String(toolArgs.email);
-      const baseCurrency = String(toolArgs.baseCurrency);
+      const sourceCurrency = String(toolArgs.baseCurrency);
       const targetCurrency = String(toolArgs.targetCurrency);
       const targetRate = Number(toolArgs.targetRate);
 
-      const res = await fetch(`${baseUrl}/api/alerts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const alert = await createAlert({
           email,
-          sourceCurrency: baseCurrency,
-          targetCurrency: targetCurrency,
+          sourceCurrency,
+          targetCurrency,
           targetRate
-        })
       });
-      if (!res.ok) {
-        const err = await res.json() as unknown;
-        return JSON.stringify({ error: "Failed to create alert", details: err });
-      }
-      const data = await res.json() as unknown;
-      return JSON.stringify({ success: true, message: "Alert successfully created", alert: data });
+
+      return JSON.stringify({ success: true, message: "Alert successfully created", alert });
     }
 
     return JSON.stringify({ error: "Unknown tool", tool: toolName });
   } catch (error) {
+    console.error(`Tool Execution Error (${toolName}):`, error);
     return JSON.stringify({ error: "Tool execution failed", tool: toolName, details: String(error) });
   }
 }
