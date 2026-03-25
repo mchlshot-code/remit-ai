@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { groq } from '@/lib/groq';
+import { streamText } from 'ai';
+import { groq } from '@ai-sdk/groq';
 import { buildSystemPrompt } from '@/modules/ai-assistant/prompt-builder';
 import { REMITAI_TOOLS } from '@/modules/ai-assistant/tool-definitions';
 import { handleToolCall } from '@/modules/ai-assistant/tool-call-handler';
-import Groq from 'groq-sdk';
 
 const ChatRequestSchema = z.object({
   messages: z.array(z.object({
@@ -47,102 +47,40 @@ export async function POST(req: NextRequest) {
       targetCurrency: parsed.targetCurrency,
     });
 
-    const messages = parsed.messages as Groq.Chat.ChatCompletionMessageParam[];
-
-    const firstResponse = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      max_tokens: 1024,
+    const result = await streamText({
+      model: groq('llama-3.1-70b-versatile'),
+      system: systemPrompt,
+      messages: parsed.messages,
+      maxOutputTokens: 1024,
       temperature: 0.3,
-      stream: false,
-      tools: REMITAI_TOOLS,
-      tool_choice: 'auto',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...messages
-      ]
+      tools: {
+        getLiveRates: {
+          description: REMITAI_TOOLS.getLiveRates.description,
+          inputSchema: REMITAI_TOOLS.getLiveRates.parameters,
+          execute: async ({ baseCurrency, targetCurrency }: { baseCurrency: string, targetCurrency: string }) => {
+            const result = await handleToolCall('getLiveRates', { baseCurrency, targetCurrency });
+            return JSON.parse(result);
+          },
+        },
+        createRateAlert: {
+          description: REMITAI_TOOLS.createRateAlert.description,
+          inputSchema: REMITAI_TOOLS.createRateAlert.parameters,
+          execute: async ({ email, baseCurrency, targetCurrency, targetRate }: { email: string, baseCurrency: string, targetCurrency: string, targetRate: number }) => {
+            const result = await handleToolCall('createRateAlert', { email, baseCurrency, targetCurrency, targetRate });
+            return JSON.parse(result);
+          },
+        },
+      },
     });
 
-    const assistantMessage = firstResponse.choices[0].message;
-
-    if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
-      // Execute each tool call via handleToolCall()
-      const toolResults: Groq.Chat.ChatCompletionMessageParam[] = [];
-      
-      for (const toolCall of assistantMessage.tool_calls) {
-        const functionName = toolCall.function.name;
-        // The type for toolArgs is record, we need to parse if it's string
-        const functionArgs = JSON.parse(toolCall.function.arguments || '{}');
-        
-        const resultString = await handleToolCall(functionName, functionArgs);
-        
-        toolResults.push({
-          role: 'tool',
-          tool_call_id: toolCall.id,
-          content: resultString
-        });
-      }
-
-      // Build updated messages array
-      const secondRoundMessages: Groq.Chat.ChatCompletionMessageParam[] = [
-        { role: 'system', content: systemPrompt },
-        ...messages,
-        assistantMessage,
-        ...toolResults
-      ];
-
-      // Make SECOND Groq call with stream: true
-      const finalStream = await groq.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
-        max_tokens: 1024,
-        temperature: 0.3,
-        stream: true,
-        messages: secondRoundMessages
-      });
-
-      const encoder = new TextEncoder();
-      const readable = new ReadableStream({
-        async start(controller) {
-          for await (const chunk of finalStream) {
-            const content = chunk.choices[0]?.delta?.content || '';
-            if (content) {
-              controller.enqueue(encoder.encode(content));
-            }
-          }
-          controller.close();
-        }
-      });
-
-      return new Response(readable, {
-        headers: {
-          'Content-Type': 'text/plain; charset=utf-8',
-          'Transfer-Encoding': 'chunked'
-        }
-      });
-
-    } else {
-      // No tool calls directly stream the content
-      const encoder = new TextEncoder();
-      const readable = new ReadableStream({
-        start(controller) {
-          controller.enqueue(encoder.encode(assistantMessage.content || ''));
-          controller.close();
-        }
-      });
-
-      return new Response(readable, {
-        headers: {
-          'Content-Type': 'text/plain; charset=utf-8',
-          'Transfer-Encoding': 'chunked'
-        }
-      });
-    }
+    return result.toTextStreamResponse();
 
   } catch (error: unknown) {
     console.error('Chat API Error:', error);
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid request', details: error.issues }, { status: 400 });
+      return Response.json({ error: 'Invalid request', details: error.issues }, { status: 400 });
     }
-    return NextResponse.json(
+    return Response.json(
       { error: error instanceof Error ? error.message : 'Unknown error' }, 
       { status: 500 }
     );
