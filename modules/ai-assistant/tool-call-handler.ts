@@ -2,6 +2,7 @@ import { fetchAllProviders, fetchBaseRate, fetchParallelRate } from '@/modules/r
 import { normalizeAndCompare } from '@/modules/rates/normalizer';
 import { cacheRateSnapshot } from '@/modules/rates/cache-service';
 import { createAlert } from '@/modules/alerts/alert-service';
+import { waitUntil } from '@vercel/functions';
 
 export async function handleToolCall(
   toolName: string,
@@ -27,12 +28,14 @@ export async function handleToolCall(
           : undefined;
 
       // Background cache (optional but keeps analytics/webhooks alive)
-      cacheRateSnapshot(
-          `${sourceCurrency}_${targetCurrency}`,
-          baseRate,
-          parallelRateEstimate?.estimatedParallelRate || null,
-          parallelRateEstimate?.source || 'jsdelivr'
-      ).catch(err => console.error('Tool cache write failed:', err));
+      waitUntil(
+          cacheRateSnapshot(
+              `${sourceCurrency}_${targetCurrency}`,
+              baseRate,
+              parallelRateEstimate?.estimatedParallelRate || null,
+              parallelRateEstimate?.source || 'jsdelivr'
+          ).catch(err => console.error('Tool cache write failed:', err))
+      );
 
       return JSON.stringify({ 
           baseRate,

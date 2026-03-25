@@ -1,4 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
+import { waitUntil } from '@vercel/functions';
 import { z } from 'zod';
 import { fetchAllProviders, fetchBaseRate, fetchParallelRate } from '../../../modules/rates/fetchers';
 import { normalizeAndCompare } from '../../../modules/rates/normalizer';
@@ -43,12 +44,14 @@ async function handleRateRequest(sourceCurrency: string, targetCurrency: string,
 
     // Persist rate snapshot to Supabase cache (triggers DB webhook → check-price-alerts)
     const currencyPair = `${sourceCurrency}_${targetCurrency}`;
-    cacheRateSnapshot(
-        currencyPair,
-        baseRate,
-        parallelRateEstimate?.estimatedParallelRate || null,
-        parallelRateEstimate?.source || 'jsdelivr'
-    ).catch(err => console.error('Cache write failed (non-blocking):', err));
+    waitUntil(
+        cacheRateSnapshot(
+            currencyPair,
+            baseRate,
+            parallelRateEstimate?.estimatedParallelRate || null,
+            parallelRateEstimate?.source || 'jsdelivr'
+        ).catch(err => console.error('Cache write failed (non-blocking):', err))
+    );
 
     return NextResponse.json({ 
         baseRate,
