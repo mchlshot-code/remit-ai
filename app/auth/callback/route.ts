@@ -11,9 +11,24 @@ export async function GET(request: Request) {
   if (code) {
     const supabase = createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
+    
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      const isLocalEnv = process.env.NODE_ENV === 'development';
+      const forwardedHost = request.headers.get('x-forwarded-host'); // original origin before Vercel proxy
+      
+      if (isLocalEnv) {
+        // we can be sure that origin is http://localhost:3000
+        return NextResponse.redirect(`${origin}${next}`);
+      } else if (forwardedHost) {
+        return NextResponse.redirect(`https://${forwardedHost}${next}`);
+      } else {
+        return NextResponse.redirect(`${origin}${next}`);
+      }
+    } else {
+      console.error('Auth code exchange failed:', error);
     }
+  } else {
+    console.warn('Auth callback hit without code');
   }
 
   // return the user to an error page with instructions
