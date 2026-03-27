@@ -9,7 +9,8 @@ import { useQuery } from '@tanstack/react-query';
 import { NormalizedRatesResponse } from '@/modules/rates/types';
 import { Bell, User as UserIcon } from 'lucide-react';
 import { useRatesStore } from '@/modules/rates/store';
-import { CURRENCY_SYMBOLS, CURRENCIES } from '@/config/currencies';
+import { CURRENCY_SYMBOLS } from '@/config/currencies';
+import { CurrencyCombobox } from '@/components/rates/currency-combobox';
 import Image from 'next/image';
 
 import { toast } from 'sonner';
@@ -128,35 +129,17 @@ export function RateAlertForm({ user, onAlertCreated }: RateAlertFormProps) {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid gap-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <div className="text-sm font-bold text-muted-foreground uppercase tracking-wider px-1">SEND FROM</div>
-                <select
-                  value={sourceCurrency}
-                  onChange={(e) => setSourceCurrency(e.target.value)}
-                  className="w-full h-14 px-5 bg-muted/30 border-2 rounded-2xl font-bold text-lg outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer"
-                >
-                  {CURRENCIES.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.flag} {c.code} - {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <CurrencyCombobox 
+                label="SEND FROM"
+                value={sourceCurrency}
+                onChange={setSourceCurrency}
+              />
 
-              <div className="space-y-2">
-                <div className="text-sm font-bold text-muted-foreground uppercase tracking-wider px-1">SEND TO</div>
-                <select
-                  value={targetCurrency}
-                  onChange={(e) => setTargetCurrency(e.target.value)}
-                  className="w-full h-14 px-5 bg-muted/30 border-2 rounded-2xl font-bold text-lg outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer"
-                >
-                  {CURRENCIES.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.flag} {c.code} - {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <CurrencyCombobox 
+                label="SEND TO"
+                value={targetCurrency}
+                onChange={setTargetCurrency}
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">

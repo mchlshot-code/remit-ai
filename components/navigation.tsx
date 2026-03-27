@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowLeftRight, Sparkles, Bell, LogOut, User } from 'lucide-react';
+import { ArrowLeftRight, Sparkles, Bell, LogOut, User as UserIcon } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
@@ -14,6 +14,7 @@ export function Navigation() {
   const router = useRouter();
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [avatarError, setAvatarError] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -95,17 +96,18 @@ export function Navigation() {
             user ? (
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border text-sm font-medium">
-                  {user.user_metadata.avatar_url ? (
+                  {user.user_metadata.avatar_url && !avatarError ? (
                     <Image 
                       src={user.user_metadata.avatar_url} 
                       alt="Avatar" 
                       width={24}
                       height={24}
-                      className="w-6 h-6 rounded-full border border-emerald-500/20"
+                      className="w-6 h-6 rounded-full border border-emerald-500/20 object-cover"
                       unoptimized
+                      onError={() => setAvatarError(true)}
                     />
                   ) : (
-                    <User className="w-4 h-4 text-emerald-500" />
+                    <UserIcon className="w-4 h-4 text-emerald-500" />
                   )}
                   <span className="max-w-[120px] truncate">{user.email}</span>
                 </div>
