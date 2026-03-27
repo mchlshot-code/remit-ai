@@ -9,7 +9,7 @@ export async function sendAlertEmail(userEmail: string, alertDetails: any) {
 
   try {
     await resend.emails.send({
-      from: 'RemitAI <alerts@remitai.app>', 
+      from: 'RemitAI <alerts@remitaiapp.com>', 
       to: userEmail,
       subject: `🎯 Your rate alert triggered! ${from_currency}→${to_currency} hit your target`,
       html: `

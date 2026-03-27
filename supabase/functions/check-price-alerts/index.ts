@@ -95,7 +95,7 @@ Deno.serve(async (req: Request) => {
               "Authorization": `Bearer ${resendApiKey}`,
             },
             body: JSON.stringify({
-              from: "RemitAI <alerts@remitai.app>",
+              from: "RemitAI <alerts@remitaiapp.com>",
               to: alert.email,
               subject: `🎯 Rate Alert Triggered! ${fromCurrency}→${toCurrency} hit your target`,
               html: `
