@@ -216,7 +216,7 @@ export default function Home() {
                 <div className="w-full h-px bg-border max-w-3xl mx-auto mb-12" />
                 
                 {user ? (
-                  <RateAlertForm userEmail={user.email!} />
+                  <RateAlertForm user={user} />
                 ) : (
                   <div className="w-full max-w-2xl bg-card border rounded-3xl p-8 text-center shadow-lg">
                     <h3 className="text-2xl font-display font-bold mb-4">Never Miss a Peak Rate</h3>
