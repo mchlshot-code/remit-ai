@@ -7,13 +7,14 @@ import * as z from 'zod';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { NormalizedRatesResponse } from '@/modules/rates/types';
-import { Bell } from 'lucide-react';
+import { Bell, User as UserIcon } from 'lucide-react';
 import { useRatesStore } from '@/modules/rates/store';
-import { CURRENCY_SYMBOLS } from '@/config/currencies';
-import { POPULAR_CORRIDORS } from '@/config/corridors';
+import { CURRENCY_SYMBOLS, CURRENCIES } from '@/config/currencies';
+import Image from 'next/image';
 
 import { toast } from 'sonner';
-import type { Alert } from './alerts-manager';
+import { Alert } from './alerts-manager';
+import { User } from '@supabase/supabase-js';
 
 const AlertSchema = z.object({
   targetRate: z.number().min(0.01, 'Target rate must be positive'),
@@ -22,39 +23,31 @@ const AlertSchema = z.object({
 type AlertFormData = z.infer<typeof AlertSchema>;
 
 interface RateAlertFormProps {
-  userEmail: string;
+  user: User;
   onAlertCreated?: (alert: Alert) => void;
 }
 
-export function RateAlertForm({ userEmail, onAlertCreated }: RateAlertFormProps) {
+export function RateAlertForm({ user, onAlertCreated }: RateAlertFormProps) {
   const { sourceCurrency: storeSource, targetCurrency: storeTarget } = useRatesStore();
   
-  // Local state for corridor selection (defaults to store values if supported, else first supported)
-  const defaultSecondary = `${storeSource}-${storeTarget}`;
-  const isStoreSupported = POPULAR_CORRIDORS.some(c => `${c.from}-${c.to}` === defaultSecondary);
-  
-  const [selectedCorridor, setSelectedCorridor] = useState(
-    isStoreSupported ? defaultSecondary : `${POPULAR_CORRIDORS[0].from}-${POPULAR_CORRIDORS[0].to}`
-  );
+  const [sourceCurrency, setSourceCurrency] = useState(storeSource || 'GBP');
+  const [targetCurrency, setTargetCurrency] = useState(storeTarget || 'NGN');
 
-  const [fromCurr, toCurr] = selectedCorridor.split('-');
-  const srcSymbol = CURRENCY_SYMBOLS[fromCurr] || fromCurr;
-  const tgtSymbol = CURRENCY_SYMBOLS[toCurr] || toCurr;
+  const srcSymbol = CURRENCY_SYMBOLS[sourceCurrency] || sourceCurrency;
+  const tgtSymbol = CURRENCY_SYMBOLS[targetCurrency] || targetCurrency;
 
-
-  
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<AlertFormData>({
     resolver: zodResolver(AlertSchema),
     defaultValues: { targetRate: 1000 }
   });
 
   const { data: latestRates, isLoading: ratesLoading } = useQuery<NormalizedRatesResponse, Error>({
-    queryKey: ['latest_rates_alerts', fromCurr, toCurr],
+    queryKey: ['latest_rates_alerts', sourceCurrency, targetCurrency],
     queryFn: async () => {
       const res = await fetch('/api/rates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sourceCurrency: fromCurr, targetCurrency: toCurr, amount: 100 })
+        body: JSON.stringify({ sourceCurrency, targetCurrency, amount: 100 })
       });
       if (!res.ok) throw new Error('Failed to fetch rates');
       return res.json();
@@ -71,9 +64,9 @@ export function RateAlertForm({ userEmail, onAlertCreated }: RateAlertFormProps)
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           targetRate: data.targetRate,
-          email: userEmail,
-          sourceCurrency: fromCurr,
-          targetCurrency: toCurr,
+          email: user.email,
+          sourceCurrency,
+          targetCurrency,
         })
       });
       
@@ -92,6 +85,9 @@ export function RateAlertForm({ userEmail, onAlertCreated }: RateAlertFormProps)
     }
   };
 
+  const [avatarError, setAvatarError] = useState(false);
+  const avatarUrl = user.user_metadata?.avatar_url;
+
   return (
     <div className="w-full">
       {/* Target Setup */}
@@ -106,7 +102,7 @@ export function RateAlertForm({ userEmail, onAlertCreated }: RateAlertFormProps)
           </div>
           <div>
             <h2 className="font-display text-2xl font-bold">Create Rate Alert</h2>
-            <p className="text-sm text-muted-foreground font-medium">{fromCurr} to {toCurr}</p>
+            <p className="text-sm text-muted-foreground font-medium">{sourceCurrency} to {targetCurrency}</p>
           </div>
         </div>
 
@@ -131,43 +127,74 @@ export function RateAlertForm({ userEmail, onAlertCreated }: RateAlertFormProps)
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid gap-6">
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <div className="text-sm font-bold text-muted-foreground uppercase tracking-wider px-1">CORRIDOR</div>
+                <div className="text-sm font-bold text-muted-foreground uppercase tracking-wider px-1">SEND FROM</div>
                 <select
-                  value={selectedCorridor}
-                  onChange={(e) => setSelectedCorridor(e.target.value)}
+                  value={sourceCurrency}
+                  onChange={(e) => setSourceCurrency(e.target.value)}
                   className="w-full h-14 px-5 bg-muted/30 border-2 rounded-2xl font-bold text-lg outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer"
                 >
-                  {POPULAR_CORRIDORS.map((c) => (
-                    <option key={`${c.from}-${c.to}`} value={`${c.from}-${c.to}`}>
-                      {c.from} → {c.to}
+                  {CURRENCIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.flag} {c.code} - {c.name}
                     </option>
                   ))}
                 </select>
               </div>
 
               <div className="space-y-2">
-                <div className="text-sm font-bold text-muted-foreground uppercase tracking-wider px-1">Logged in as</div>
-                <div className="text-base font-semibold px-5 py-3 bg-muted/30 border-2 rounded-2xl w-full text-foreground/80">
-                  {userEmail}
-                </div>
+                <div className="text-sm font-bold text-muted-foreground uppercase tracking-wider px-1">SEND TO</div>
+                <select
+                  value={targetCurrency}
+                  onChange={(e) => setTargetCurrency(e.target.value)}
+                  className="w-full h-14 px-5 bg-muted/30 border-2 rounded-2xl font-bold text-lg outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer"
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.flag} {c.code} - {c.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider px-1 block">Target Rate ({tgtSymbol})</label>
-              <div className="relative group">
-                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-xl text-muted-foreground font-bold group-focus-within:text-emerald-500 transition-colors">{tgtSymbol}</span>
-                <input 
-                  {...register('targetRate', { valueAsNumber: true })}
-                  type="number" 
-                  step="any"
-                  placeholder="0.00"
-                  className="w-full h-14 pl-12 pr-6 rounded-2xl border-2 bg-background focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all font-bold text-xl"
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider px-1 block">Target Rate ({tgtSymbol})</label>
+                <div className="relative group">
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-xl text-muted-foreground font-bold group-focus-within:text-emerald-500 transition-colors">{tgtSymbol}</span>
+                  <input 
+                    {...register('targetRate', { valueAsNumber: true })}
+                    type="number" 
+                    step="any"
+                    placeholder="0.00"
+                    className="w-full h-14 pl-12 pr-6 rounded-2xl border-2 bg-background focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all font-bold text-xl"
+                  />
+                </div>
+                {errors.targetRate && <p className="text-red-500 text-xs font-bold mt-2 px-1">{errors.targetRate.message}</p>}
               </div>
-              {errors.targetRate && <p className="text-red-500 text-xs font-bold mt-2 px-1">{errors.targetRate.message}</p>}
+
+              <div className="space-y-2">
+                <div className="text-sm font-bold text-muted-foreground uppercase tracking-wider px-1">Logged in as</div>
+                <div className="flex items-center gap-3 h-14 px-4 bg-muted/30 border-2 rounded-2xl w-full">
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center overflow-hidden border border-emerald-500/20">
+                    {avatarUrl && !avatarError ? (
+                      <Image 
+                        src={avatarUrl} 
+                        alt="Avatar" 
+                        width={32} 
+                        height={32} 
+                        className="w-full h-full object-cover"
+                        onError={() => setAvatarError(true)}
+                      />
+                    ) : (
+                      <UserIcon className="w-4 h-4 text-emerald-500" />
+                    )}
+                  </div>
+                  <span className="text-sm font-bold text-foreground/80 truncate">{user.email}</span>
+                </div>
+              </div>
             </div>
           </div>
 

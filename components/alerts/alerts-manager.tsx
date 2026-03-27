@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { RateAlertForm } from './rate-alert-form';
 import { AlertsList } from './alerts-list';
 
+import { User } from '@supabase/supabase-js';
+
 export interface Alert {
   id: string;
   source_currency: string;
@@ -15,11 +17,11 @@ export interface Alert {
 
 interface AlertsManagerProps {
   initialAlerts: Alert[];
-  userEmail: string;
+  user: User;
   onDeleteAction: (id: string) => Promise<void>;
 }
 
-export function AlertsManager({ initialAlerts, userEmail, onDeleteAction }: AlertsManagerProps) {
+export function AlertsManager({ initialAlerts, user, onDeleteAction }: AlertsManagerProps) {
   const [alerts, setAlerts] = useState<Alert[]>(initialAlerts);
 
   // When a new alert is successfully created, add it to the top of our local state
@@ -42,7 +44,7 @@ export function AlertsManager({ initialAlerts, userEmail, onDeleteAction }: Aler
 
   return (
     <div className="max-w-2xl mx-auto flex flex-col gap-12">
-      <RateAlertForm userEmail={userEmail} onAlertCreated={handleAlertCreated} />
+      <RateAlertForm user={user} onAlertCreated={handleAlertCreated} />
       <AlertsList alerts={alerts} onDelete={handleDelete} />
     </div>
   );

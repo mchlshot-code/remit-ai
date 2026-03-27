@@ -37,7 +37,7 @@ export default async function AlertsPage() {
         </div>
         <AlertsManager 
           initialAlerts={alerts || []} 
-          userEmail={user.email!} 
+          user={user} 
           onDeleteAction={deleteAlertAction} 
         />
       </div>
