@@ -2,6 +2,7 @@ import { fetchAllProviders, fetchBaseRate, fetchParallelRate } from '@/modules/r
 import { normalizeAndCompare } from '@/modules/rates/normalizer';
 import { cacheRateSnapshot } from '@/modules/rates/cache-service';
 import { createAlert } from '@/modules/alerts/alert-service';
+import { createClient } from '@/lib/supabase/server';
 import { waitUntil } from '@vercel/functions';
 
 export async function handleToolCall(
@@ -45,13 +46,22 @@ export async function handleToolCall(
     }
 
     if (toolName === 'createRateAlert') {
-      const email = String(toolArgs.email);
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user || !user.email) {
+        return JSON.stringify({ 
+          error: "User must be logged in to create an alert.",
+          hint: "Please ask the user to sign in first."
+        });
+      }
+
       const sourceCurrency = String(toolArgs.baseCurrency);
       const targetCurrency = String(toolArgs.targetCurrency);
       const targetRate = Number(toolArgs.targetRate);
 
       const alert = await createAlert({
-          email,
+          email: user.email,
           sourceCurrency,
           targetCurrency,
           targetRate
