@@ -8,7 +8,7 @@ export async function sendAlertEmail(userEmail: string, alertDetails: any) {
   const fromCurr = from_currency === 'GBP' ? '£' : from_currency === 'USD' ? '$' : from_currency;
 
   try {
-    await resend.emails.send({
+    const data = await resend.emails.send({
       from: 'RemitAI <alerts@remitaiapp.com>', 
       to: userEmail,
       subject: `🎯 Your rate alert triggered! ${from_currency}→${to_currency} hit your target`,
@@ -36,8 +36,15 @@ export async function sendAlertEmail(userEmail: string, alertDetails: any) {
         </div>
       `
     });
+    
+    if (data.error) {
+        throw new Error(data.error.message);
+    }
+
     console.log(`Alert email sent to ${userEmail} for target ${target_rate}`);
+    return { success: true, data };
   } catch (error) {
     console.error('Failed to send email:', error);
+    return { success: false, error };
   }
 }

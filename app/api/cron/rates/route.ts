@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
 
             for (const alert of triggeredAlerts) {
                 // 5. Send email via Resend
-                await sendAlertEmail(alert.email, {
+                const emailResult = await sendAlertEmail(alert.email, {
                     from_currency: alert.from_currency,
                     to_currency: alert.to_currency,
                     target_rate: alert.target_rate,
@@ -66,21 +66,26 @@ export async function GET(req: NextRequest) {
                     link: `https://remitaiapp.com/go/${bestProvider.provider.toLowerCase().replace(/\s+/g, '-')}`
                 });
 
-                // 6. Update alert in DB: set is_active=false, is_triggered=true
-                const { error: updateError } = await supabaseAdmin
-                    .from('rate_alerts')
-                    .update({
-                        is_active: false,
-                        is_triggered: true,
-                        triggered_at: new Date().toISOString(),
-                        current_rate: currentRate
-                    })
-                    .eq('id', alert.id);
-                
-                if (updateError) {
-                    console.error(`Failed to update alert ${alert.id}:`, updateError);
+                if (emailResult.success) {
+                    // 6. Update alert in DB: set is_active=false, is_triggered=true
+                    const { error: updateError } = await supabaseAdmin
+                        .from('rate_alerts')
+                        .update({
+                            is_active: false,
+                            is_triggered: true,
+                            triggered_at: new Date().toISOString(),
+                            current_rate: currentRate
+                        })
+                        .eq('id', alert.id);
+                    
+                    if (updateError) {
+                        console.error(`Failed to update alert ${alert.id} after successful email:`, updateError);
+                    } else {
+                        results.push({ id: alert.id, status: 'triggered', rate: currentRate });
+                    }
                 } else {
-                    results.push({ id: alert.id, status: 'triggered', rate: currentRate });
+                    console.error(`[RESEND CRON ERROR] Failed to send email for alert ${alert.id}:`, emailResult.error);
+                    // We DO NOT update the DB here, so it will try again on the next cron run
                 }
             }
         }
